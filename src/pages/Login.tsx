@@ -9,16 +9,15 @@ import { useToast } from "../hooks/use-toast";
 import { config } from "../config";
 
 export default function Login() {
-  const [email, setEmail] = useState("demo@brookshow.com");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
@@ -27,16 +26,30 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
+      const base = (config.apiBaseUrl || "").replace(/\/$/, "");
+      const headers = new Headers();
+      headers.set("Content-Type", "application/json");
+      if (config.apiKey) {
+        headers.set("x_api_key", config.apiKey);
+        headers.set("x-api-key", config.apiKey);
+      }
+      const resp = await fetch(`${base}/auth/request-otp`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email }),
       });
-      navigate("/dashboard");
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || "Failed to request OTP");
+      }
+      // store for VerifyOTP page
+      localStorage.setItem("pending_email", email);
+      toast({ title: "OTP sent", description: "Please check your email." });
+      navigate("/verify-otp");
     } catch (error) {
       toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
+        title: "Request failed",
+        description: error instanceof Error ? error.message : "Unable to send OTP",
         variant: "destructive",
       });
     } finally {
@@ -66,7 +79,7 @@ export default function Login() {
           <CardHeader>
             <CardTitle>Login</CardTitle>
             <CardDescription>
-              Enter any email and password to login (demo mode)
+              Enter your email to receive a login OTP
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -76,33 +89,19 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="demo@brookshow.com"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="demo123"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
+                {loading ? "Sending OTP..." : "Send OTP"}
               </Button>
 
               <div className="text-sm text-muted-foreground text-center pt-2">
-                <p>Demo credentials:</p>
-                <p>Email: demo@brookshow.com</p>
-                <p>Password: demo123</p>
+                <p>Don't have an account? <Link to="/signup" className="underline">Sign up</Link></p>
               </div>
             </form>
           </CardContent>

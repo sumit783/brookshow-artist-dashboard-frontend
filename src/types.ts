@@ -117,3 +117,61 @@ export interface LoginCredentials {
   email: string;
   password: string;
 }
+
+export interface RegisterPayload {
+  email: string;
+  phone: string;
+  displayName: string;
+  countryCode: string;
+  role: "artist"; // fixed as artist per requirements
+}
+
+export interface RegisterResponseUser {
+  email: string;
+  phone: string;
+  countryCode: string;
+  displayName: string;
+  role: "artist" | "admin";
+  isPhoneVerified: boolean;
+  isEmailVerified: boolean;
+  isAdminVerified: boolean;
+  isActive: boolean;
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  user: RegisterResponseUser;
+}
+
+export interface VerifyOTPPayload {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyOTPResponse {
+  success: boolean;
+  message: string;
+  user: RegisterResponseUser;
+  jwtToken: string;
+}
+
+export interface EventPricing {
+  eventPlannerPrice: number;
+  userPrice: number;
+  advance: number;
+}
+
+export interface ProfilePayload {
+  profileImage?: File;
+  bio: string;
+  category: string[];
+  city: string;
+  state: string;
+  country: string;
+  eventPricing: Record<string, EventPricing>;
+}

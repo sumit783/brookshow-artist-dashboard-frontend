@@ -39,7 +39,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-16 left-0 z-50 h-[calc(100vh-4rem)] w-64 glass-modern border-r border-border/50 transition-transform duration-300 md:sticky md:translate-x-0",
+          "fixed left-0 z-50 h-[calc(100vh-4rem)] w-64 glass-modern border-r border-border/50 transition-transform duration-300 md:sticky md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

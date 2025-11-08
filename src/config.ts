@@ -6,7 +6,8 @@ export const config = {
   tagline: "Book Artists, Capture Memories",
   
   // API Configuration - Replace with your actual backend URL
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api",
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  apiKey: import.meta.env.VITE_API_KEY || "",
   
   // Mock mode - Set to false when connecting to real backend
   useMockData: true,

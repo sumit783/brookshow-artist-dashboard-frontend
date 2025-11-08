@@ -1,20 +1,43 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
-import PublicHome from "./pages/PublicHome";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import Signup from "./pages/Signup";
+import VerifyOTP from "./pages/VerifyOTP";
+import CompleteProfile from "./pages/CompleteProfile";
+import Layout from "./components/Layout";
 import DashboardHome from "./pages/DashboardHome";
 import Bookings from "./pages/Bookings";
 import CalendarPage from "./pages/CalendarPage";
 import Media from "./pages/Media";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
+import NetworkIssue from "./pages/NetworkIssue";
 
 const queryClient = new QueryClient();
+
+function NetworkListener() {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    const goIssue = () => navigate("/network-issue", { replace: true });
+    const onOffline = () => goIssue();
+    const onIssue = () => goIssue();
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("network-issue", onIssue as EventListener);
+    if (!navigator.onLine) {
+      goIssue();
+    }
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("network-issue", onIssue as EventListener);
+    };
+  }, [navigate]);
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -23,9 +46,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <NetworkListener />
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Dashboard />}>
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/network-issue" element={<NetworkIssue />} />
+            <Route path="/" element={<Layout />}>
               <Route index element={<DashboardHome />} />
               <Route path="bookings" element={<Bookings />} />
               <Route path="calendar" element={<CalendarPage />} />

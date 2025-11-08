@@ -11,7 +11,7 @@ export default function Layout() {
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-background/95">
+        <main className="flex-1 h-screen overflow-y-scroll no-scrollbar bg-gradient-to-br from-background via-background to-background/95">
           <div className="container mx-auto p-4 md:p-6 lg:p-8">
             <Outlet />
           </div>

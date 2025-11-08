@@ -10,6 +10,11 @@ import {
   MediaItem,
   LoginCredentials,
   AuthUser,
+  RegisterPayload,
+  RegisterResponse,
+  VerifyOTPPayload,
+  VerifyOTPResponse,
+  ProfilePayload,
 } from "../types";
 import {
   mockArtist,
@@ -21,6 +26,45 @@ import {
 
 // Simulated network delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Centralized fetch with headers (x_api_key and Authorization)
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const token = localStorage.getItem("auth_token");
+  const headers = new Headers(init?.headers || {});
+  
+  // Only set Content-Type for non-FormData requests
+  if (!(init?.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+  
+  if (config.apiKey) {
+    headers.set("x_api_key", config.apiKey);
+    headers.set("x-api-key", config.apiKey); // compatibility with hyphenated header
+  } else if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.warn("VITE_API_KEY is not set; requests may be rejected by the API.");
+  }
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const url = `${config.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
+  const response = await fetch(url, { ...init, headers });
+  // Global network issue handling
+  if (response.status === 503 || (!navigator.onLine)) {
+    try {
+      window.dispatchEvent(new Event("network-issue"));
+    } catch (_) {
+      // ignore
+    }
+  } else {
+    // Inspect body (non-blocking) for specific backend error without consuming stream
+    const clone = response.clone();
+    clone.text().then((text) => {
+      if (text && text.includes("Network connection required")) {
+        window.dispatchEvent(new Event("network-issue"));
+      }
+    }).catch(() => {});
+  }
+  return response;
+}
 
 // Mock Auth
 export const authApi = {
@@ -43,6 +87,60 @@ export const authApi = {
     throw new Error("Invalid credentials");
   },
   
+  async register(payload: RegisterPayload): Promise<{ user: AuthUser }> {
+    // Always hit real backend for registration; ignores mock mode
+    const response = await apiFetch("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      let message = "Registration failed";
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json().catch(() => null);
+        message = (data && (data.message || data.error)) || message;
+        // Include HTTP status for caller-side parsing/branching
+        throw new Error(JSON.stringify({ message, status: response.status }));
+      } else {
+        const text = await response.text().catch(() => "");
+        message = text || message;
+        throw new Error(message);
+      }
+    }
+    const data: RegisterResponse = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Registration failed");
+    }
+    const mappedUser: AuthUser = {
+      id: data.user._id,
+      email: data.user.email,
+      role: data.user.role === "artist" ? "artist" : "admin",
+    };
+    return { user: mappedUser };
+  },
+  
+  async verifyOTP(payload: VerifyOTPPayload): Promise<{ user: AuthUser; token: string }> {
+    // Verify registration OTP and get JWT token
+    const response = await apiFetch("/auth/verify-registration-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "OTP verification failed");
+    }
+    const data: VerifyOTPResponse = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "OTP verification failed");
+    }
+    const mappedUser: AuthUser = {
+      id: data.user._id,
+      email: data.user.email,
+      role: data.user.role === "artist" ? "artist" : "admin",
+    };
+    return { user: mappedUser, token: data.jwtToken };
+  },
+  
   async logout(): Promise<void> {
     await delay(200);
     // Clear localStorage
@@ -59,6 +157,15 @@ export const authApi = {
 
 // Mock Artists API
 export const artistsApi = {
+  async getCategories(activeOnly: boolean = true): Promise<string[]> {
+    const response = await apiFetch(`/artist/categories?activeOnly=${activeOnly ? "true" : "false"}`);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Failed to load categories");
+    }
+    const data = await response.json();
+    return Array.isArray(data?.categories) ? data.categories : [];
+  },
   async getById(id: string): Promise<Artist> {
     await delay(300);
     if (id === mockArtist.id) {
@@ -70,6 +177,38 @@ export const artistsApi = {
   async update(id: string, data: Partial<Artist>): Promise<Artist> {
     await delay(500);
     return { ...mockArtist, ...data };
+  },
+  
+  async updateProfile(payload: ProfilePayload): Promise<{ success: boolean; message: string }> {
+    // Always hit real backend for profile update
+    const formData = new FormData();
+    
+    if (payload.profileImage) {
+      formData.append("profileImage", payload.profileImage);
+    }
+    formData.append("bio", payload.bio);
+    formData.append("category", payload.category.join(",")); // Comma-separated string
+    formData.append("city", payload.city);
+    formData.append("state", payload.state);
+    formData.append("country", payload.country);
+    formData.append("eventPricing", JSON.stringify(payload.eventPricing));
+    
+    const response = await apiFetch("/artist/profile", {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Profile update failed");
+    }
+    
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Profile update failed");
+    }
+    
+    return data;
   },
 };
 

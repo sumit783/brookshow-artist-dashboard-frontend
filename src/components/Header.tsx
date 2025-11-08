@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Wifi, WifiOff, User, Menu, Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSync } from "../hooks/useSync";
 import { Button } from "./ui/button";
@@ -23,6 +24,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const { isOnline, pendingCount } = useSync();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstall, setShowInstall] = useState(false);
 
@@ -140,7 +142,16 @@ export function Header({ onMenuClick }: HeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await logout();
+                    } finally {
+                      // Ensure redirect even if logout throws
+                      navigate("/login", { replace: true });
+                    }
+                  }}
+                >
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
