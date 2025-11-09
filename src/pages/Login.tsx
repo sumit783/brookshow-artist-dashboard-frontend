@@ -38,6 +38,7 @@ export default function Login() {
         headers,
         body: JSON.stringify({ email }),
       });
+      
       if (!resp.ok) {
         const text = await resp.text();
         throw new Error(text || "Failed to request OTP");
@@ -46,11 +47,13 @@ export default function Login() {
       localStorage.setItem("pending_email", email);
       toast({ title: "OTP sent", description: "Please check your email." });
       navigate("/verify-otp");
-    } catch (error) {
+
+    } catch (error: any) {
+      
       toast({
         title: "Request failed",
-        description: error instanceof Error ? error.message : "Unable to send OTP",
-        variant: "destructive",
+        description: "User already exists or invalid email",
+        variant: "destructive" as const,
       });
     } finally {
       setLoading(false);

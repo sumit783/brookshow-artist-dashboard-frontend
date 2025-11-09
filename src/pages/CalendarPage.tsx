@@ -178,10 +178,10 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold">Calendar</h1>
           <p className="text-muted-foreground">Manage your schedule and availability</p>
         </div>
-        <Button onClick={() => setShowOfflineBookingModal(true)}>
+        {/* <Button onClick={() => setShowOfflineBookingModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Offline Booking
-        </Button>
+        </Button> */}
       </div>
 
       <div className="bg-card rounded-lg p-4 border">
