@@ -176,3 +176,40 @@ export interface ProfilePayload {
   country: string;
   eventPricing: Record<string, EventPricing>;
 }
+
+export interface WalletStats {
+  balance: number;
+  totalIncome: number;
+  totalWithdrawn: number;
+  currency: string;
+}
+
+export interface BankDetail {
+  id: string;
+  artistId: string;
+  accountHolderName: string;
+  accountNumber: string;
+  bankName: string;
+  ifscCode: string;
+  isDefault: boolean;
+}
+
+export interface WalletTransaction {
+  id: string;
+  amount: number;
+  type: "credit" | "debit";
+  description: string;
+  status: "pending" | "completed" | "failed";
+  createdAt: string;
+  referenceId?: string; // e.g., Booking ID or Withdrawal ID
+}
+
+export interface WithdrawalRequest {
+  id: string;
+  amount: number;
+  status: "pending" | "processed" | "rejected";
+  requestedAt: string;
+  processedAt?: string;
+  bankDetailSnapshot?: BankDetail;
+  adminNotes?: string;
+}

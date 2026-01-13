@@ -6,6 +6,7 @@ import {
   DollarSign,
   User,
   X,
+  Wallet,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/calendar", icon: Calendar, label: "Calendar" },
   { to: "/media", icon: Image, label: "Media" },
   { to: "/pricing", icon: DollarSign, label: "Pricing" },
+  { to: "/wallet", icon: Wallet, label: "Wallet" },
 ];
 
 export function Sidebar({ open, onClose }: SidebarProps) {

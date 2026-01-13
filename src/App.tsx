@@ -16,6 +16,7 @@ import CalendarPage from "./pages/CalendarPage";
 import Media from "./pages/Media";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
+import Wallet from "./pages/Wallet";
 import NetworkIssue from "./pages/NetworkIssue";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="media" element={<Media />} />
               <Route path="pricing" element={<Pricing />} />
+              <Route path="wallet" element={<Wallet />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

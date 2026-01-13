@@ -15,6 +15,10 @@ import {
   VerifyOTPPayload,
   VerifyOTPResponse,
   ProfilePayload,
+  WalletStats,
+  WalletTransaction,
+  BankDetail,
+  WithdrawalRequest,
 } from "../types";
 // Removed mock data imports - now using real API endpoints
 
@@ -25,12 +29,12 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = localStorage.getItem("auth_token");
   const headers = new Headers(init?.headers || {});
-  
+
   // Only set Content-Type for non-FormData requests
   if (!(init?.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
-  
+
   if (config.apiKey) {
     headers.set("x_api_key", config.apiKey);
     headers.set("x-api-key", config.apiKey); // compatibility with hyphenated header
@@ -39,9 +43,9 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
     console.warn("VITE_API_KEY is not set; requests may be rejected by the API.");
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  
+
   const url = `${config.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
-  
+
   // Log headers for debugging (only in dev mode and for services endpoint)
   if (import.meta.env.DEV && path.includes("services")) {
     console.log("=== apiFetch Request ===");
@@ -58,9 +62,9 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
       console.log("Request Body:", init.body instanceof FormData ? "[FormData]" : init.body);
     }
   }
-  
+
   const response = await fetch(url, { ...init, headers });
-  
+
   // Log response for services endpoint
   if (import.meta.env.DEV && path.includes("services")) {
     console.log("=== apiFetch Response ===");
@@ -81,7 +85,7 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
       if (text && text.includes("Network connection required")) {
         window.dispatchEvent(new Event("network-issue"));
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }
   return response;
 }
@@ -90,7 +94,7 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<{ user: AuthUser; token: string }> {
     await delay(500);
-    
+
     // Demo login - accepts any credentials
     if (credentials.email && credentials.password) {
       return {
@@ -102,10 +106,10 @@ export const authApi = {
         token: "mock-jwt-token",
       };
     }
-    
+
     throw new Error("Invalid credentials");
   },
-  
+
   async register(payload: RegisterPayload): Promise<{ user: AuthUser }> {
     // Always hit real backend for registration; ignores mock mode
     const response = await apiFetch("/auth/register", {
@@ -137,7 +141,7 @@ export const authApi = {
     };
     return { user: mappedUser };
   },
-  
+
   async verifyOTP(payload: VerifyOTPPayload): Promise<{ user: AuthUser; token: string }> {
     // Verify registration OTP and get JWT token
     const response = await apiFetch("/auth/verify-registration-otp", {
@@ -159,14 +163,14 @@ export const authApi = {
     };
     return { user: mappedUser, token: data.jwtToken };
   },
-  
+
   async logout(): Promise<void> {
     await delay(200);
     // Clear localStorage
     localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_user");
   },
-  
+
   async getCurrentUser(): Promise<AuthUser | null> {
     await delay(200);
     const user = localStorage.getItem("auth_user");
@@ -189,22 +193,22 @@ export const artistsApi = {
     try {
       console.log("Fetching artist by ID:", id);
       const response = await apiFetch(`/artist/${id}`);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to load artist: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Artist response data:", data);
-      
+
       if (!data.success || !data.artist) {
         throw new Error(data.message || "Artist not found");
       }
-      
+
       const artist = data.artist;
-      
+
       // Map API response to Artist type
       const mappedArtist: Artist = {
         id: artist._id || id,
@@ -219,7 +223,7 @@ export const artistsApi = {
         coverImageId: artist.coverImageId || artist.profileImage || undefined,
         createdAt: artist.createdAt || new Date().toISOString(),
       };
-      
+
       console.log("Mapped artist:", mappedArtist);
       return mappedArtist;
     } catch (error) {
@@ -227,11 +231,11 @@ export const artistsApi = {
       throw error;
     }
   },
-  
+
   async update(id: string, data: Partial<Artist>): Promise<Artist> {
     try {
       console.log("Updating artist:", id, data);
-      
+
       const updatePayload: any = {};
       if (data.displayName !== undefined) updatePayload.displayName = data.displayName;
       if (data.email !== undefined) updatePayload.email = data.email;
@@ -241,26 +245,26 @@ export const artistsApi = {
       if (data.city !== undefined) updatePayload.city = data.city;
       if (data.coverImageId !== undefined) updatePayload.coverImageId = data.coverImageId;
       if (data.verified !== undefined) updatePayload.verified = data.verified;
-      
+
       const response = await apiFetch(`/artist/${id}`, {
         method: "PUT",
         body: JSON.stringify(updatePayload),
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to update artist: ${response.status} ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       if (!responseData.success || !responseData.artist) {
         throw new Error(responseData.message || "Artist update was not successful");
       }
-      
+
       const artist = responseData.artist;
-      
+
       // Map API response back to Artist type
       const mappedArtist: Artist = {
         id: artist._id || id,
@@ -275,18 +279,18 @@ export const artistsApi = {
         coverImageId: artist.coverImageId || artist.profileImage || data.coverImageId || undefined,
         createdAt: artist.createdAt || new Date().toISOString(),
       };
-      
+
       return mappedArtist;
     } catch (error) {
       console.error("Error in update:", error);
       throw error;
     }
   },
-  
+
   async updateProfile(payload: ProfilePayload): Promise<{ success: boolean; message: string }> {
     // Always hit real backend for profile update
     const formData = new FormData();
-    
+
     if (payload.profileImage) {
       formData.append("profileImage", payload.profileImage);
     }
@@ -296,22 +300,22 @@ export const artistsApi = {
     formData.append("state", payload.state);
     formData.append("country", payload.country);
     formData.append("eventPricing", JSON.stringify(payload.eventPricing));
-    
+
     const response = await apiFetch("/artist/profile", {
       method: "POST",
       body: formData,
     });
-    
+
     if (!response.ok) {
       const text = await response.text();
       throw new Error(text || "Profile update failed");
     }
-    
+
     const data = await response.json();
     if (!data.success) {
       throw new Error(data.message || "Profile update failed");
     }
-    
+
     return data;
   },
 };
@@ -325,31 +329,31 @@ export const servicesApi = {
       console.log("Fetching services - Token present:", !!token);
       console.log("Fetching services - API Key present:", !!apiKey);
       console.log("ArtistId:", artistId);
-      
+
       const response = await apiFetch("/services/");
       console.log("Response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to load services: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("API Response Data:", data);
-      
+
       if (!data.success) {
         console.error("API returned success: false", data);
         throw new Error(data.message || "API request was not successful");
       }
-      
+
       if (!Array.isArray(data.services)) {
         console.error("Invalid response format - services is not an array:", data);
         throw new Error("Invalid response format: services is not an array");
       }
-      
+
       console.log("Mapping services:", data.services.length, "items");
-      
+
       // Map API response to Service type
       const mappedServices = data.services.map((service: any) => ({
         id: service._id,
@@ -363,7 +367,7 @@ export const servicesApi = {
         extras: service.extras || [],
         active: service.active !== undefined ? service.active : true,
       }));
-      
+
       console.log("Mapped services:", mappedServices);
       return mappedServices;
     } catch (error) {
@@ -381,22 +385,22 @@ export const servicesApi = {
       console.log("API Key present:", !!apiKey);
       console.log("API Base URL:", config.apiBaseUrl);
       console.log("Fetching services and IDs from /services/services-and-id");
-      
+
       const response = await apiFetch("/services/services-and-id");
       console.log("Services and ID response status:", response.status, response.statusText);
       console.log("Response headers:", Object.fromEntries(response.headers.entries()));
-      
+
       // Read response body once (can only be read once)
       const responseText = await response.text();
       console.log("Response text (raw):", responseText);
       console.log("Response text length:", responseText.length);
-      
+
       // Check if response is empty
       if (!responseText || responseText.trim().length === 0) {
         console.error("Empty response from server");
         throw new Error("Empty response from server");
       }
-      
+
       // Parse response
       let data;
       try {
@@ -407,34 +411,34 @@ export const servicesApi = {
         console.error("Response text that failed to parse:", responseText);
         throw new Error(`Invalid JSON response from server: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       }
-      
+
       // Check response status after parsing (to get error message from JSON if available)
       if (!response.ok) {
         console.error("API returned error status:", response.status);
         console.error("Error response data:", data);
         throw new Error(data?.message || data?.error || responseText || `Failed to load services: ${response.status} ${response.statusText}`);
       }
-      
+
       // Validate response structure
       if (!data.success) {
         console.error("API returned success: false", data);
         throw new Error(data.message || data.error || "API request was not successful");
       }
-      
+
       if (!data.services) {
         console.error("No services field in response:", data);
         throw new Error("Invalid response format: services field is missing");
       }
-      
+
       if (!Array.isArray(data.services)) {
         console.error("Invalid response format - services is not an array:", data);
         console.error("Services type:", typeof data.services, "Value:", data.services);
         throw new Error("Invalid response format: services is not an array");
       }
-      
+
       console.log("Mapping services and IDs:", data.services.length, "items");
       console.log("Raw services data:", data.services);
-      
+
       // Map API response to simple service option format
       const mappedServices = data.services.map((service: any, index: number) => {
         const mapped = {
@@ -444,7 +448,7 @@ export const servicesApi = {
         console.log(`Service ${index + 1}:`, { raw: service, mapped });
         return mapped;
       });
-      
+
       console.log("Mapped services and IDs:", mappedServices);
       console.log("=== getServicesAndId SUCCESS ===");
       return mappedServices;
@@ -457,16 +461,16 @@ export const servicesApi = {
       throw error;
     }
   },
-  
+
   async create(service: Omit<Service, "id">): Promise<Service> {
     await delay(500);
     return { ...service, id: `service-${Date.now()}` };
   },
-  
+
   async update(id: string, data: Partial<Service>): Promise<Service> {
     try {
       console.log("Updating service:", id, "with data:", data);
-      
+
       // Map Service fields back to API format
       const updatePayload: any = {};
       if (data.price_for_user !== undefined) {
@@ -490,27 +494,27 @@ export const servicesApi = {
       if (data.active !== undefined) {
         updatePayload.active = data.active;
       }
-      
+
       const response = await apiFetch(`/services/${id}`, {
         method: "PUT",
         body: JSON.stringify(updatePayload),
       });
-      
+
       console.log("Update response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to update service: ${response.status} ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Update response data:", responseData);
-      
+
       if (!responseData.success) {
         throw new Error(responseData.message || "Service update was not successful");
       }
-      
+
       // Map API response back to Service type
       const service = responseData.service || responseData;
       return {
@@ -530,20 +534,20 @@ export const servicesApi = {
       throw error;
     }
   },
-  
+
   async delete(id: string): Promise<void> {
     try {
       console.log("Deleting service:", id);
       const response = await apiFetch(`/services/${id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to delete service: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "Service deletion was not successful");
@@ -557,83 +561,83 @@ export const servicesApi = {
 
 // Bookings API
 export const bookingsApi = {
-  async getByArtist(artistId: string): Promise<Booking[]> {
+  async getBookings(): Promise<Booking[]> {
     try {
-      console.log("Fetching bookings for artistId:", artistId);
+      console.log("Fetching all bookings");
       const response = await apiFetch("/bookings/");
       console.log("Bookings response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to load bookings: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Bookings response data:", data);
-      
+
       if (!data.success) {
         console.error("API returned success: false", data);
         throw new Error(data.message || "API request was not successful");
       }
-      
+
       if (!Array.isArray(data.bookings)) {
         console.error("Invalid response format - bookings is not an array:", data);
         // Return empty array if no bookings
         return [];
       }
-      
+
       console.log("Mapping bookings:", data.bookings.length, "items");
-      
+
       // Map API response to Booking type
       const mappedBookings = data.bookings.map((booking: any) => ({
         id: booking._id,
-        clientName: booking.clientName || booking.client?.name || "Unknown Client",
-        clientPhone: booking.clientPhone || booking.client?.phone || "",
-        clientPhoneMasked: booking.clientPhoneMasked || booking.client?.phoneMasked || "",
+        clientName: booking.clientId?.displayName || booking.clientName || "Unknown Client",
+        clientPhone: booking.clientId?.phone || booking.clientPhone || "",
+        clientPhoneMasked: booking.clientId?.phone ? booking.clientId.phone.replace(/\d(?=\d{4})/g, "*") : (booking.clientPhoneMasked || ""),
         start: booking.startAt || booking.start,
         end: booking.endAt || booking.end,
         serviceId: booking.serviceId?._id || booking.serviceId || "",
         serviceName: booking.serviceId?.category || booking.serviceName || "Service",
-        artistId: typeof booking.artistId === "string" ? booking.artistId : booking.artistId?._id || "",
-        source: booking.source === "offline" ? "user" : (booking.source === "planner" ? "planner" : "user"),
+        artistId: typeof booking.artistId === "object" ? (booking.artistId?._id || "") : (booking.artistId || ""),
+        source: booking.source || "user",
         status: booking.status || "pending",
-        price: booking.totalPrice || booking.price || 0,
+        price: booking.totalPrice || booking.price || booking.serviceId?.price_for_user || 0,
         notes: booking.notes || booking.description || "",
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced" as const,
       }));
-      
+
       console.log("Mapped bookings:", mappedBookings);
       return mappedBookings;
     } catch (error) {
-      console.error("Error in getByArtist:", error);
+      console.error("Error in getBookings:", error);
       throw error;
     }
   },
-  
+
   async getById(id: string): Promise<Booking> {
     try {
       console.log("Fetching booking by ID:", id);
       const response = await apiFetch(`/bookings/${id}`);
       console.log("Booking response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to load booking: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Booking response data:", data);
-      
+
       if (!data.success || !data.booking) {
         throw new Error(data.message || "Booking not found");
       }
-      
+
       const booking = data.booking;
-      
+
       // Map API response to Booking type
       // Note: The API response may have client info in different fields
       const mappedBooking: Booking = {
@@ -654,7 +658,7 @@ export const bookingsApi = {
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
       };
-      
+
       console.log("Mapped booking:", mappedBooking);
       return mappedBooking;
     } catch (error) {
@@ -662,11 +666,11 @@ export const bookingsApi = {
       throw error;
     }
   },
-  
+
   async create(booking: Omit<Booking, "id" | "createdAt" | "updatedAt">): Promise<Booking> {
     try {
       console.log("Creating booking:", booking);
-      
+
       // Map Booking type to API format
       const createPayload: any = {
         artistId: booking.artistId,
@@ -680,29 +684,29 @@ export const bookingsApi = {
         totalPrice: booking.price || 0,
         notes: booking.notes || undefined,
       };
-      
+
       const response = await apiFetch("/bookings/", {
         method: "POST",
         body: JSON.stringify(createPayload),
       });
-      
+
       console.log("Create booking response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to create booking: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Create booking response data:", data);
-      
+
       if (!data.success || !data.booking) {
         throw new Error(data.message || "Booking creation was not successful");
       }
-      
+
       const createdBooking = data.booking;
-      
+
       // Map API response back to Booking type
       const mappedBooking: Booking = {
         id: createdBooking._id,
@@ -722,7 +726,7 @@ export const bookingsApi = {
         updatedAt: createdBooking.updatedAt,
         syncStatus: "synced",
       };
-      
+
       console.log("Mapped created booking:", mappedBooking);
       return mappedBooking;
     } catch (error) {
@@ -730,30 +734,30 @@ export const bookingsApi = {
       throw error;
     }
   },
-  
+
   async updateStatus(id: string, status: Booking["status"]): Promise<Booking> {
     try {
       console.log("Updating booking status:", id, status);
-      
+
       const response = await apiFetch(`/bookings/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status }),
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to update booking status: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.success || !data.booking) {
         throw new Error(data.message || "Booking status update was not successful");
       }
-      
+
       const booking = data.booking;
-      
+
       // Map API response back to Booking type
       const mappedBooking: Booking = {
         id: booking._id,
@@ -773,40 +777,40 @@ export const bookingsApi = {
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
       };
-      
+
       return mappedBooking;
     } catch (error) {
       console.error("Error in updateStatus:", error);
       throw error;
     }
   },
-  
+
   async createOffline(payload: { serviceId: string; startAt: string; endAt: string; totalPrice: number }): Promise<Booking> {
     try {
       console.log("Creating offline booking:", payload);
-      
+
       const response = await apiFetch("/bookings/offline", {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      
+
       console.log("Create offline booking response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to create offline booking: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Create offline booking response data:", data);
-      
+
       if (!data.success || !data.booking) {
         throw new Error(data.message || "Offline booking creation was not successful");
       }
-      
+
       const booking = data.booking;
-      
+
       // Map API response to Booking type
       const mappedBooking: Booking = {
         id: booking._id,
@@ -826,7 +830,7 @@ export const bookingsApi = {
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
       };
-      
+
       console.log("Mapped offline booking:", mappedBooking);
       return mappedBooking;
     } catch (error) {
@@ -834,20 +838,20 @@ export const bookingsApi = {
       throw error;
     }
   },
-  
+
   async delete(id: string): Promise<void> {
     try {
       console.log("Deleting booking:", id);
       const response = await apiFetch(`/bookings/${id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to delete booking: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "Booking deletion was not successful");
@@ -866,28 +870,28 @@ export const calendarApi = {
       console.log("Fetching calendar blocks from /api/calendar-blocks/");
       const response = await apiFetch("/calendar-blocks/");
       console.log("Calendar blocks response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to load calendar blocks: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Calendar blocks response data:", data);
-      
+
       if (!data.success) {
         console.error("API returned success: false", data);
         throw new Error(data.message || "API request was not successful");
       }
-      
+
       if (!Array.isArray(data.calendarBlocks)) {
         console.error("Invalid response format - calendarBlocks is not an array:", data);
         throw new Error("Invalid response format: calendarBlocks is not an array");
       }
-      
+
       console.log("Mapping calendar blocks:", data.calendarBlocks.length, "items");
-      
+
       // Map API response to CalendarBlock type
       const mappedBlocks = data.calendarBlocks.map((block: any) => ({
         id: block._id,
@@ -899,7 +903,7 @@ export const calendarApi = {
         linkedBookingId: block.linkedBookingId || undefined,
         syncStatus: "synced" as const,
       }));
-      
+
       console.log("Mapped calendar blocks:", mappedBlocks);
       return mappedBlocks;
     } catch (error) {
@@ -907,11 +911,11 @@ export const calendarApi = {
       throw error;
     }
   },
-  
+
   async create(block: Omit<CalendarBlock, "id">): Promise<CalendarBlock> {
     try {
       console.log("Creating calendar block:", block);
-      
+
       // Map CalendarBlock type to API format
       const createPayload: any = {
         artistId: block.artistId,
@@ -921,29 +925,29 @@ export const calendarApi = {
         title: block.title,
         linkedBookingId: block.linkedBookingId || undefined,
       };
-      
+
       const response = await apiFetch("/calendar-blocks/", {
         method: "POST",
         body: JSON.stringify(createPayload),
       });
-      
+
       console.log("Create calendar block response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to create calendar block: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Create calendar block response data:", data);
-      
+
       if (!data.success || !data.calendarBlock) {
         throw new Error(data.message || "Calendar block creation was not successful");
       }
-      
+
       const createdBlock = data.calendarBlock;
-      
+
       // Map API response back to CalendarBlock type
       const mappedBlock: CalendarBlock = {
         id: createdBlock._id,
@@ -955,7 +959,7 @@ export const calendarApi = {
         linkedBookingId: createdBlock.linkedBookingId || block.linkedBookingId,
         syncStatus: "synced" as const,
       };
-      
+
       console.log("Mapped created calendar block:", mappedBlock);
       return mappedBlock;
     } catch (error) {
@@ -963,20 +967,20 @@ export const calendarApi = {
       throw error;
     }
   },
-  
+
   async delete(id: string): Promise<void> {
     try {
       console.log("Deleting calendar block:", id);
       const response = await apiFetch(`/calendar-blocks/${id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to delete calendar block: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "Calendar block deletion was not successful");
@@ -995,7 +999,7 @@ export const mediaApi = {
       console.log("Fetching media for artistId:", artistId);
       const response = await apiFetch(`/media/?artistId=${artistId}`);
       console.log("Media response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
@@ -1005,23 +1009,23 @@ export const mediaApi = {
         }
         throw new Error(text || `Failed to load media: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Media response data:", data);
-      
+
       if (!data.success) {
         console.error("API returned success: false", data);
         // Return empty array if no media
         return [];
       }
-      
+
       if (!Array.isArray(data.media)) {
         console.error("Invalid response format - media is not an array:", data);
         return [];
       }
-      
+
       console.log("Mapping media:", data.media.length, "items");
-      
+
       // Map API response to MediaItem type
       const mappedMedia = data.media.map((item: any) => ({
         id: item._id,
@@ -1035,7 +1039,7 @@ export const mediaApi = {
         uploadedAt: item.uploadedAt || item.createdAt || new Date().toISOString(),
         syncStatus: "synced" as const,
       }));
-      
+
       console.log("Mapped media:", mappedMedia);
       return mappedMedia;
     } catch (error) {
@@ -1044,37 +1048,37 @@ export const mediaApi = {
       return [];
     }
   },
-  
+
   async upload(artistId: string, file: File): Promise<MediaItem> {
     try {
       console.log("Uploading media for artistId:", artistId, "file:", file.name);
-      
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("artistId", artistId);
-      
+
       const response = await apiFetch("/media/upload", {
         method: "POST",
         body: formData,
       });
-      
+
       console.log("Upload response status:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to upload media: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("Upload response data:", data);
-      
+
       if (!data.success || !data.media) {
         throw new Error(data.message || "Media upload was not successful");
       }
-      
+
       const uploadedMedia = data.media;
-      
+
       // Map API response to MediaItem type
       const mappedMedia: MediaItem = {
         id: uploadedMedia._id,
@@ -1088,7 +1092,7 @@ export const mediaApi = {
         uploadedAt: uploadedMedia.uploadedAt || uploadedMedia.createdAt || new Date().toISOString(),
         syncStatus: "synced" as const,
       };
-      
+
       console.log("Mapped uploaded media:", mappedMedia);
       return mappedMedia;
     } catch (error) {
@@ -1096,11 +1100,11 @@ export const mediaApi = {
       throw error;
     }
   },
-  
+
   async updateOrder(artistId: string, mediaIds: string[]): Promise<void> {
     try {
       console.log("Updating media order for artistId:", artistId, "order:", mediaIds);
-      
+
       const response = await apiFetch("/media/order", {
         method: "PUT",
         body: JSON.stringify({
@@ -1108,13 +1112,13 @@ export const mediaApi = {
           mediaIds,
         }),
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to update media order: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "Media order update was not successful");
@@ -1124,26 +1128,142 @@ export const mediaApi = {
       throw error;
     }
   },
-  
+
   async delete(id: string): Promise<void> {
     try {
       console.log("Deleting media:", id);
       const response = await apiFetch(`/media/${id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const text = await response.text();
         console.error("API Error Response:", text);
         throw new Error(text || `Failed to delete media: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || "Media deletion was not successful");
       }
     } catch (error) {
       console.error("Error in delete:", error);
+      throw error;
+    }
+  },
+};
+
+// Wallet API
+export const walletApi = {
+  async getStats(): Promise<WalletStats> {
+    try {
+      const response = await apiFetch("/wallet/stats");
+      if (!response.ok) {
+        throw new Error("Failed to fetch wallet stats");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch wallet stats");
+      }
+      return data.stats;
+    } catch (error) {
+      console.error("Error fetching wallet stats:", error);
+      throw error;
+    }
+  },
+
+  async getTransactions(): Promise<WalletTransaction[]> {
+    try {
+      const response = await apiFetch("/wallet/transactions");
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch transactions");
+      }
+      return data.transactions;
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      throw error;
+    }
+  },
+
+  async requestWithdrawal(amount: number, bankDetailId: string): Promise<WithdrawalRequest> {
+    try {
+      const response = await apiFetch("/wallet/withdraw", {
+        method: "POST",
+        body: JSON.stringify({ amount, bankDetailId }),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Withdrawal request failed");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Withdrawal request failed");
+      }
+      return data.withdrawal;
+    } catch (error) {
+      console.error("Error requesting withdrawal:", error);
+      throw error;
+    }
+  },
+};
+
+// Bank Details API
+export const bankDetailsApi = {
+  async getBankDetails(): Promise<BankDetail[]> {
+    try {
+      const response = await apiFetch("/artist/bank-details");
+      if (!response.ok) {
+        throw new Error("Failed to fetch bank details");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch bank details");
+      }
+      return data.bankDetails;
+    } catch (error) {
+      console.error("Error fetching bank details:", error);
+      throw error;
+    }
+  },
+
+  async addBankDetail(detail: Omit<BankDetail, "id">): Promise<BankDetail> {
+    try {
+      const response = await apiFetch("/artist/bank-details", {
+        method: "POST",
+        body: JSON.stringify(detail),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add bank detail");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to add bank detail");
+      }
+      return data.bankDetail;
+    } catch (error) {
+      console.error("Error adding bank detail:", error);
+      throw error;
+    }
+  },
+
+  async deleteBankDetail(id: string): Promise<void> {
+    try {
+      const response = await apiFetch(`/artist/bank-details/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete bank detail");
+      }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to delete bank detail");
+      }
+    } catch (error) {
+      console.error("Error deleting bank detail:", error);
       throw error;
     }
   },
@@ -1157,4 +1277,6 @@ export const apiClient = {
   bookings: bookingsApi,
   calendar: calendarApi,
   media: mediaApi,
+  wallet: walletApi,
+  bankDetails: bankDetailsApi,
 };

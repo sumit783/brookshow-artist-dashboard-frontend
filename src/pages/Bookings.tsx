@@ -34,7 +34,7 @@ export default function Bookings() {
       }
 
       // Then fetch from API
-      const data = await apiClient.bookings.getByArtist(user.artistId);
+      const data = await apiClient.bookings.getBookings();
       setBookings(data);
 
       // Update cache
