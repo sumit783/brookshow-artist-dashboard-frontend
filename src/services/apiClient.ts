@@ -563,8 +563,7 @@ export const servicesApi = {
 export const bookingsApi = {
   async getBookings(): Promise<Booking[]> {
     try {
-      console.log("Fetching all bookings");
-      const response = await apiFetch("/bookings/");
+      const response = await apiFetch("/bookings");
       console.log("Bookings response status:", response.status, response.statusText);
 
       if (!response.ok) {
@@ -574,8 +573,6 @@ export const bookingsApi = {
       }
 
       const data = await response.json();
-      console.log("Bookings response data:", data);
-
       if (!data.success) {
         console.error("API returned success: false", data);
         throw new Error(data.message || "API request was not successful");
@@ -583,18 +580,17 @@ export const bookingsApi = {
 
       if (!Array.isArray(data.bookings)) {
         console.error("Invalid response format - bookings is not an array:", data);
-        // Return empty array if no bookings
         return [];
       }
-
-      console.log("Mapping bookings:", data.bookings.length, "items");
 
       // Map API response to Booking type
       const mappedBookings = data.bookings.map((booking: any) => ({
         id: booking._id,
         clientName: booking.clientId?.displayName || booking.clientName || "Unknown Client",
         clientPhone: booking.clientId?.phone || booking.clientPhone || "",
-        clientPhoneMasked: booking.clientId?.phone ? booking.clientId.phone.replace(/\d(?=\d{4})/g, "*") : (booking.clientPhoneMasked || ""),
+        clientPhoneMasked: booking.clientId?.phone
+          ? booking.clientId.phone.replace(/\d(?=\d{4})/g, "*")
+          : (booking.clientPhoneMasked || ""),
         start: booking.startAt || booking.start,
         end: booking.endAt || booking.end,
         serviceId: booking.serviceId?._id || booking.serviceId || "",
@@ -602,14 +598,13 @@ export const bookingsApi = {
         artistId: typeof booking.artistId === "object" ? (booking.artistId?._id || "") : (booking.artistId || ""),
         source: booking.source || "user",
         status: booking.status || "pending",
-        price: booking.totalPrice || booking.price || booking.serviceId?.price_for_user || 0,
+        price: booking.totalPrice || booking.price || (typeof booking.serviceId === 'object' ? booking.serviceId?.price_for_user : 0) || 0,
         notes: booking.notes || booking.description || "",
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced" as const,
       }));
 
-      console.log("Mapped bookings:", mappedBookings);
       return mappedBookings;
     } catch (error) {
       console.error("Error in getBookings:", error);
@@ -1157,7 +1152,7 @@ export const mediaApi = {
 export const walletApi = {
   async getStats(): Promise<WalletStats> {
     try {
-      const response = await apiFetch("/wallet/stats");
+      const response = await apiFetch("/artist/wallet");
       if (!response.ok) {
         throw new Error("Failed to fetch wallet stats");
       }
@@ -1165,7 +1160,13 @@ export const walletApi = {
       if (!data.success) {
         throw new Error(data.message || "Failed to fetch wallet stats");
       }
-      return data.stats;
+      // Map fields directly as requested by the user
+      return {
+        balance: data.balance || 0,
+        totalIncome: data.totalIncome || 0,
+        totalWithdrawn: data.totalWithdrawn || 0,
+        currency: data.currency || "INR",
+      };
     } catch (error) {
       console.error("Error fetching wallet stats:", error);
       throw error;
@@ -1174,7 +1175,7 @@ export const walletApi = {
 
   async getTransactions(): Promise<WalletTransaction[]> {
     try {
-      const response = await apiFetch("/wallet/transactions");
+      const response = await apiFetch("/artist/wallet/transactions");
       if (!response.ok) {
         throw new Error("Failed to fetch transactions");
       }
@@ -1182,18 +1183,28 @@ export const walletApi = {
       if (!data.success) {
         throw new Error(data.message || "Failed to fetch transactions");
       }
-      return data.transactions;
+
+      // Map API response to WalletTransaction type
+      return (data.transactions || []).map((tx: any) => ({
+        id: tx._id || tx.id,
+        amount: tx.amount || 0,
+        type: tx.type || "credit",
+        description: tx.description || "",
+        status: tx.status || "pending",
+        createdAt: tx.createdAt || new Date().toISOString(),
+        referenceId: tx.referenceId || undefined,
+      }));
     } catch (error) {
       console.error("Error fetching transactions:", error);
       throw error;
     }
   },
 
-  async requestWithdrawal(amount: number, bankDetailId: string): Promise<WithdrawalRequest> {
+  async requestWithdrawal(amount: number): Promise<WithdrawalRequest> {
     try {
-      const response = await apiFetch("/wallet/withdraw", {
+      const response = await apiFetch("/artist/withdraw", {
         method: "POST",
-        body: JSON.stringify({ amount, bankDetailId }),
+        body: JSON.stringify({ amount }),
       });
       if (!response.ok) {
         const text = await response.text();

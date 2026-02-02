@@ -39,9 +39,14 @@ export function BookingCard({
             <h3 className="font-semibold text-lg">{booking.clientName}</h3>
             <p className="text-sm text-muted-foreground">{booking.serviceName}</p>
           </div>
-          <Badge variant={statusColors[booking.status] as any}>
-            {booking.status}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant={statusColors[booking.status] as any}>
+              {booking.status}
+            </Badge>
+            <Badge variant="outline" className="text-[10px] py-0 h-4">
+              {booking.source === "user" ? "Online" : booking.source === "offline" ? "Offline" : "Planner"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
@@ -54,10 +59,7 @@ export function BookingCard({
             </span>
           </div>
           
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">
-              Source: {booking.source === "user" ? "Direct" : "Event Planner"}
-            </span>
+          <div className="flex items-center justify-end">
             <span className="font-semibold">${booking.price}</span>
           </div>
         </div>

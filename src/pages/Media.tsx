@@ -107,7 +107,18 @@ export default function Media() {
   };
 
   const uploadToServer = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > MAX_SIZE) {
+        toast({
+          title: "File too large",
+          description: `"${files[i].name}" exceeds the 5MB limit.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       setUploading(true);
       const token = localStorage.getItem("auth_token");
@@ -256,7 +267,7 @@ export default function Media() {
           Drag and drop files here, or click to browse
         </p>
         <p className="text-xs text-muted-foreground">
-          Supports: Images (JPG, PNG, GIF) and Videos (MP4, MOV)
+          Max size: 5MB • Supports: Images (JPG, PNG, GIF) and Videos (MP4, MOV)
         </p>
       </Card>
 

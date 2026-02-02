@@ -34,7 +34,7 @@ export interface ServiceExtra {
 }
 
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
-export type BookingSource = "user" | "planner";
+export type BookingSource = "user" | "planner" | "offline";
 
 export interface Booking {
   id: string;
@@ -187,11 +187,13 @@ export interface WalletStats {
 export interface BankDetail {
   id: string;
   artistId: string;
-  accountHolderName: string;
-  accountNumber: string;
-  bankName: string;
-  ifscCode: string;
-  isDefault: boolean;
+  type: "bank" | "upi";
+  accountHolderName?: string;
+  accountNumber?: string;
+  bankName?: string;
+  ifscCode?: string;
+  upiId?: string;
+  isPrimary: boolean;
 }
 
 export interface WalletTransaction {

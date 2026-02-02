@@ -107,7 +107,7 @@ export function BookingDetailModal({
           <div className="rounded-lg bg-info-light p-3">
             <p className="text-xs text-info-foreground">
               <span className="font-medium">Booking Source:</span>{" "}
-              {booking.source === "user" ? "Direct Booking" : "Event Planner"}
+              {booking.source === "user" ? "Online Booking (Direct)" : booking.source === "offline" ? "Offline Booking" : "Event Planner"}
             </p>
           </div>
         </div>

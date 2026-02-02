@@ -9,6 +9,7 @@ import { BankDetailsDialog } from "../components/BankDetailsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Badge } from "../components/ui/badge";
 import { useToast } from "../hooks/use-toast";
 
 export default function Wallet() {
@@ -39,7 +40,7 @@ export default function Wallet() {
       // Also fetch bank details to set default for withdrawal
       const bankData = await apiClient.bankDetails.getBankDetails();
       if (bankData.length > 0) {
-        setSelectedBank(bankData.find(b => b.isDefault) || bankData[0]);
+        setSelectedBank(bankData.find(b => b.isPrimary) || bankData[0]);
       }
     } catch (error) {
       console.error("Error fetching wallet data:", error);
@@ -58,7 +59,7 @@ export default function Wallet() {
       toast({
         title: "No Bank Account",
         description: "Please add a bank account first.",
-        action: <Button variant="outline" size="sm" onClick={() => setIsBankDetailsOpen(true)}>Add Bank</Button>
+        action: <Button variant="outline" size="sm" onClick={() => setIsBankDetailsOpen(true)}>Add Method</Button>
       });
       return;
     }
@@ -79,7 +80,7 @@ export default function Wallet() {
 
     setWithdrawing(true);
     try {
-      await apiClient.wallet.requestWithdrawal(Number(withdrawAmount), selectedBank.id);
+      await apiClient.wallet.requestWithdrawal(Number(withdrawAmount));
       toast({ title: "Success", description: "Withdrawal request submitted" });
       setIsWithdrawOpen(false);
       setWithdrawAmount("");
@@ -173,8 +174,20 @@ export default function Wallet() {
                       <p className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <div className={`font-bold ${tx.type === "credit" ? "text-green-600" : "text-orange-600"}`}>
-                    {tx.type === "credit" ? "+" : "-"}{formatCurrency(tx.amount)}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className={`font-bold ${tx.type === "credit" ? "text-green-600" : "text-orange-600"}`}>
+                      {tx.type === "credit" ? "+" : "-"}{formatCurrency(tx.amount)}
+                    </div>
+                    <Badge 
+                      variant={
+                        tx.status === "completed" ? "default" : 
+                        tx.status === "pending" ? "outline" : 
+                        "destructive"
+                      }
+                      className="text-[10px] h-4 py-0"
+                    >
+                      {tx.status}
+                    </Badge>
                   </div>
                 </div>
               ))
@@ -207,8 +220,13 @@ export default function Wallet() {
               <p className="text-sm font-medium">To Account:</p>
               <div className="flex justify-between items-center mt-1">
                 <div>
-                   <p className="text-sm font-bold">{selectedBank?.bankName}</p>
-                   <p className="text-xs text-muted-foreground">****{selectedBank?.accountNumber.slice(-4)}</p>
+                   <p className="text-sm font-bold">{selectedBank?.type === "bank" ? selectedBank.bankName : "UPI ID"}</p>
+                   <p className="text-xs text-muted-foreground">
+                    {selectedBank?.type === "bank" 
+                      ? `****${selectedBank.accountNumber?.slice(-4)}` 
+                      : selectedBank?.upiId
+                    }
+                   </p>
                 </div>
                 <Button type="button" variant="link" size="sm" onClick={() => { setIsWithdrawOpen(false); setIsBankDetailsOpen(true); }}>
                   Change
