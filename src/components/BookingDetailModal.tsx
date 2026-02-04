@@ -57,7 +57,7 @@ export function BookingDetailModal({
             <Phone className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm font-medium">Contact</p>
-              <p className="text-sm text-muted-foreground">{booking.clientPhoneMasked}</p>
+              <p className="text-sm text-muted-foreground">{booking.clientPhone}</p>
             </div>
           </div>
 

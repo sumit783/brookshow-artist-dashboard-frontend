@@ -55,7 +55,7 @@ export interface Booking {
   syncStatus?: SyncStatus;
 }
 
-export type CalendarBlockType = "busy" | "offline-booking";
+export type CalendarBlockType = "busy" | "offline-booking" | "onlineBooking";
 
 export interface CalendarBlock {
   id: string;
@@ -64,7 +64,7 @@ export interface CalendarBlock {
   end: string;
   type: CalendarBlockType;
   title: string;
-  linkedBookingId?: string;
+  linkedBookingId?: string | Booking;
   syncStatus?: SyncStatus;
 }
 

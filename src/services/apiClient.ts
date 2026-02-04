@@ -734,8 +734,8 @@ export const bookingsApi = {
     try {
       console.log("Updating booking status:", id, status);
 
-      const response = await apiFetch(`/bookings/${id}`, {
-        method: "PUT",
+      const response = await apiFetch(`/artist/bookings/${id}/status`, {
+        method: "PATCH",
         body: JSON.stringify({ status }),
       });
 
@@ -862,8 +862,8 @@ export const bookingsApi = {
 export const calendarApi = {
   async getByArtist(artistId: string): Promise<CalendarBlock[]> {
     try {
-      console.log("Fetching calendar blocks from /api/calendar-blocks/");
-      const response = await apiFetch("/calendar-blocks/");
+      console.log("Fetching calendar blocks from /api/calendar-blocks");
+      const response = await apiFetch("/calendar-blocks");
       console.log("Calendar blocks response status:", response.status, response.statusText);
 
       if (!response.ok) {
@@ -888,16 +888,23 @@ export const calendarApi = {
       console.log("Mapping calendar blocks:", data.calendarBlocks.length, "items");
 
       // Map API response to CalendarBlock type
-      const mappedBlocks = data.calendarBlocks.map((block: any) => ({
-        id: block._id,
-        artistId: block.artistId,
-        start: block.startDate,
-        end: block.endDate,
-        type: block.type === "offlineBooking" ? "offline-booking" as const : "busy" as const,
-        title: block.title || "Calendar Block",
-        linkedBookingId: block.linkedBookingId || undefined,
-        syncStatus: "synced" as const,
-      }));
+      const mappedBlocks = data.calendarBlocks.map((block: any) => {
+        let blockType: any = "busy";
+        if (block.type === "offlineBooking") blockType = "offline-booking";
+        else if (block.type === "onlineBooking") blockType = "onlineBooking";
+        else if (block.type === "busy") blockType = "busy";
+
+        return {
+          id: block._id,
+          artistId: block.artistId,
+          start: block.startDate || block.start,
+          end: block.endDate || block.end,
+          type: blockType,
+          title: block.title || "Calendar Block",
+          linkedBookingId: block.linkedBookingId, // Keep strictly as is from API if it's an object or string
+          syncStatus: "synced" as const,
+        };
+      });
 
       console.log("Mapped calendar blocks:", mappedBlocks);
       return mappedBlocks;

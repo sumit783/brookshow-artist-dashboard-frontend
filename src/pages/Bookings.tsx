@@ -6,14 +6,25 @@ import { BookingCard } from "../components/BookingCard";
 import { BookingDetailModal } from "../components/BookingDetailModal";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 import { useToast } from "../hooks/use-toast";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export function Bookings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [bookingToComplete, setBookingToComplete] = useState<string | null>(null);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
   const { toast } = useToast();
 
@@ -26,14 +37,7 @@ export function Bookings() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: BookingStatus }) => {
-      // For now we keep using the apiClient. Though update logic wasn't fully shown in apiClient, 
-      // we assume it correctly hits the update endpoint.
-      // If there's no updateBooking method, we'd need to add it or keep the current queue logic.
-      // Based on previous code, it used syncQueue. 
-      // Let's stick to the current logic but wrapped in a mutation for better state handling.
-      // Wait, I should check if apiClient has updateBooking. 
-      // The original code used syncQueue. Let's keep that logic for now but invalidate query on success.
-      return { id, status };
+      return apiClient.bookings.updateStatus(id, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
@@ -41,23 +45,24 @@ export function Bookings() {
   });
 
   const handleUpdateStatus = async (id: string, status: BookingStatus) => {
-    // Current app uses syncQueue for offline-first. Let's maintain that but also use mutation for UI.
     try {
-      // Call optimization: invalidate query instead of manual state management
-      // (This is just a wrapper for the existing logic to fit into React Query flow)
-      updateStatusMutation.mutate({ id, status });
-      
-      // The original logic was:
-      // await syncQueue.enqueue({ action: "update", entity: "booking", data: { id, status } });
-      // To keep it safe, I'll essentially trigger a refetch or optimistic update.
-      
+      await updateStatusMutation.mutateAsync({ id, status });
       toast({ title: "Booking updated", description: `Booking ${status}` });
     } catch (error) {
       toast({ title: "Error", description: "Failed to update booking", variant: "destructive" });
     }
   };
 
-  const handleComplete = (id: string) => handleUpdateStatus(id, "completed");
+  const handleComplete = (id: string) => {
+    setBookingToComplete(id);
+  };
+
+  const confirmComplete = async () => {
+    if (bookingToComplete) {
+      await handleUpdateStatus(bookingToComplete, "completed");
+      setBookingToComplete(null);
+    }
+  };
 
   const handleWhatsApp = (phone: string) => {
     const message = encodeURIComponent("Hello! This is regarding your booking with BrookShow.");
@@ -146,6 +151,24 @@ export function Bookings() {
           setSelectedBooking(null);
         }}
       />
+
+      <AlertDialog open={!!bookingToComplete} onOpenChange={(open) => !open && setBookingToComplete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this booking as completed? This action will update the booking status.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateStatusMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmComplete} disabled={updateStatusMutation.isPending}>
+              {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
