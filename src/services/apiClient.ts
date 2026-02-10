@@ -176,6 +176,33 @@ export const authApi = {
     const user = localStorage.getItem("auth_user");
     return user ? JSON.parse(user) : null;
   },
+  async updateUser(payload: { displayName: string; email: string; phone: string; countryCode: string }): Promise<{ success: boolean; user: AuthUser }> {
+    const response = await apiFetch("/auth/update-user", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Failed to update user details");
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to update user details");
+    }
+
+    // Update local storage if needed
+    if (data.user) {
+      const currentUser = await this.getCurrentUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...data.user }; // Merge
+        localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      }
+    }
+
+    return data;
+  },
 };
 
 // Artists API
@@ -302,7 +329,7 @@ export const artistsApi = {
     formData.append("eventPricing", JSON.stringify(payload.eventPricing));
 
     const response = await apiFetch("/artist/profile", {
-      method: "POST",
+      method: "PUT",
       body: formData,
     });
 

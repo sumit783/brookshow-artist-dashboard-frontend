@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyOTP from "./pages/VerifyOTP";
 import CompleteProfile from "./pages/CompleteProfile";
+import EditProfile from "./pages/EditProfile";
 import Layout from "./components/Layout";
 import DashboardHome from "./pages/DashboardHome";
 import Bookings from "./pages/Bookings";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/network-issue" element={<NetworkIssue />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<DashboardHome />} />

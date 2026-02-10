@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../services/apiClient";
@@ -129,6 +130,11 @@ export default function DashboardHome() {
             Welcome back, {profile?.userId?.displayName || artist?.displayName}!
           </h1>
           <p className="text-muted-foreground mt-2">Manage your artist profile and settings</p>
+        </div>
+        <div className="ml-auto">
+          <Button onClick={() => navigate("/edit-profile")} variant="outline">
+            Edit Profile
+          </Button>
         </div>
       </div>
 
