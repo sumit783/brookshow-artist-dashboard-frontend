@@ -75,6 +75,9 @@ export function BookingDetailModal({
               <p className="text-sm font-medium">Date</p>
               <p className="text-sm text-muted-foreground">
                 {format(startDate, "MMMM dd, yyyy")}
+                {format(startDate, "yyyy-MM-dd") !== format(endDate, "yyyy-MM-dd") && (
+                  <> - {format(endDate, "MMMM dd, yyyy")}</>
+                )}
               </p>
             </div>
           </div>
@@ -89,11 +92,26 @@ export function BookingDetailModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium">Price</p>
-              <p className="text-sm text-muted-foreground">${booking.price}</p>
+          <div className="flex items-start gap-3">
+            <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Payment Details</p>
+              <div className="mt-2 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Price</span>
+                  <span className="font-semibold">₹{booking.price}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Advance Paid</span>
+                  <span className="text-green-600 font-medium">₹{booking.paidAmount || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-1 border-t border-dashed">
+                  <span className="font-medium">Pending Amount</span>
+                  <span className="font-bold text-orange-600">
+                    ₹{Math.max(0, booking.price - (booking.paidAmount || 0))}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -111,20 +129,9 @@ export function BookingDetailModal({
             </p>
           </div>
         </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => onBlockCalendar?.(booking)}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Block on Calendar
-          </Button>
-          <Button variant="default" className="flex-1" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+        <Button variant="default" onClick={onClose}>
+          Close
+        </Button>
       </DialogContent>
     </Dialog>
   );

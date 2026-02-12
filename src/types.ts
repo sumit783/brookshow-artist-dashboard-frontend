@@ -49,6 +49,8 @@ export interface Booking {
   source: BookingSource;
   status: BookingStatus;
   price: number;
+  advanceAmount?: number;
+  paidAmount?: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;

@@ -55,7 +55,7 @@ export function BookingCard({
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span>
-              {format(startDate, "MMM dd, yyyy • h:mm a")} - {format(endDate, "h:mm a")}
+              {format(startDate, "MMM dd, yyyy • h:mm a")} - {format(endDate, format(startDate, "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd") ? "h:mm a" : "MMM dd, h:mm a")}
             </span>
           </div>
           
