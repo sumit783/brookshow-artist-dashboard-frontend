@@ -5,7 +5,8 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCcw } from "lucide-react";
 import { config } from "../config";
 
 const VerifyOTP = () => {
@@ -96,6 +97,16 @@ const VerifyOTP = () => {
           asChild
         >
           <Link to="/login">← Back to Login</Link>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => window.location.reload()}
+          className="absolute -top-4 right-0 glass-modern"
+          title="Refresh Page"
+        >
+          <RefreshCcw className="h-4 w-4" />
         </Button>
 
         <div className="text-center mt-8">

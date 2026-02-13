@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Badge } from "../components/ui/badge";
-import { Camera, ChevronLeft, Loader2 } from "lucide-react";
+import { Camera, ChevronLeft, Loader2, RefreshCcw } from "lucide-react";
 import { apiClient, authApi } from "../services/apiClient";
 import { ProfilePayload, EventPricing } from "../types";
 import { config } from "../config";
@@ -282,10 +282,20 @@ const EditProfile = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-dark px-4 py-8">
       <div className="w-full max-w-3xl space-y-6">
-        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        <div className="flex justify-between items-center mb-4">
+          <Button variant="ghost" onClick={() => navigate("/")}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.location.reload()}
+            title="Refresh Page"
+          >
+            <RefreshCcw className="h-4 w-4" />
+          </Button>
+        </div>
         
         <div className="text-center">
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">

@@ -7,6 +7,7 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { useToast } from "../hooks/use-toast";
 import { config } from "../config";
+import { RefreshCcw } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -69,6 +70,16 @@ export default function Login() {
           asChild
         >
           <Link to="/">← Back to Website</Link>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => window.location.reload()}
+          className="absolute -top-4 right-0 glass-modern"
+          title="Refresh Page"
+        >
+          <RefreshCcw className="h-4 w-4" />
         </Button>
         
         <div className="text-center mt-8">

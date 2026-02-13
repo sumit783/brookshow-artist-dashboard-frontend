@@ -6,7 +6,8 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { config } from "../config";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RefreshCcw } from "lucide-react";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -72,6 +73,16 @@ const Signup = () => {
           asChild
         >
           <Link to="/">← Back to Website</Link>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => window.location.reload()}
+          className="absolute -top-4 right-0 glass-modern"
+          title="Refresh Page"
+        >
+          <RefreshCcw className="h-4 w-4" />
         </Button>
 
         <div className="text-center mt-8">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Wifi, WifiOff, User, Menu, Download } from "lucide-react";
+import { Wifi, WifiOff, User, Menu, Download, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSync } from "../hooks/useSync";
@@ -124,6 +124,16 @@ export function Header({ onMenuClick }: HeaderProps) {
                 {pendingCount} pending
               </Badge>
             )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.location.reload()}
+              title="Refresh Page"
+              className="hover:bg-accent/10"
+            >
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* User Menu */}

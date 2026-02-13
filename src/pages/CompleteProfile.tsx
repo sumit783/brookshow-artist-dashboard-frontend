@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Badge } from "../components/ui/badge";
-import { Camera } from "lucide-react";
+import { Camera, RefreshCcw } from "lucide-react";
 import { apiClient } from "../services/apiClient";
 import { ProfilePayload, EventPricing } from "../types";
 
@@ -169,6 +169,15 @@ const CompleteProfile = () => {
             Complete Your Profile
           </h1>
           <p className="text-muted-foreground">Fill in your details to get started</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="mt-2"
+          >
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Refresh Page
+          </Button>
         </div>
 
         <Card className="glass-modern hover-glow hover:scale-100">
