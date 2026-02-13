@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../services/apiClient";
 import { Booking, CalendarBlock } from "../types";
@@ -11,8 +12,6 @@ import { BookingDetailsDialog } from "../components/calendar/BookingDetailsDialo
 
 export default function CalendarPage() {
   const { user } = useAuth();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [blocks, setBlocks] = useState<CalendarBlock[]>([]);
   const [calendarView, setCalendarView] = useState<string>("dayGridMonth");
   
   // Dialog states
@@ -29,6 +28,19 @@ export default function CalendarPage() {
   const [loadingServices, setLoadingServices] = useState(false);
 
   const { toast } = useToast();
+
+  // For artist users, use user.id as artistId if artistId is not set
+  const artistId = user?.artistId || (user?.role === "artist" ? user.id : null);
+
+  const { data: blocks = [], isLoading: isLoadingBlocks, refetch: refetchBlocks } = useQuery({
+    queryKey: ["calendar-blocks", artistId],
+    queryFn: async () => {
+      if (!artistId) return [];
+      console.log("Loading calendar data for artistId:", artistId);
+      return await apiClient.calendar.getByArtist(artistId);
+    },
+    enabled: !!artistId,
+  });
 
   // Determine initial view based on screen size
   useEffect(() => {
@@ -47,35 +59,7 @@ export default function CalendarPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
 
-  const loadData = async () => {
-    // For artist users, use user.id as artistId if artistId is not set
-    const artistId = user?.artistId || (user?.role === "artist" ? user.id : null);
-    
-    if (!artistId) {
-      console.warn("No artistId found in user object:", user);
-      return;
-    }
-
-    try {
-      console.log("Loading calendar data for artistId:", artistId);
-      const blocksData = await apiClient.calendar.getByArtist(artistId);
-
-      console.log("Loaded blocks:", blocksData.length);
-      setBookings([]);
-      setBlocks(blocksData);
-    } catch (error) {
-      console.error("Failed to load calendar data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load calendar data",
-        variant: "destructive",
-      });
-    }
-  };
 
   const loadServices = async () => {
     try {
@@ -163,7 +147,7 @@ export default function CalendarPage() {
       });
 
       // Reload calendar data to get the updated bookings and blocks
-      await loadData();
+      await refetchBlocks();
 
       toast({
         title: "Offline booking created",
@@ -182,43 +166,7 @@ export default function CalendarPage() {
     }
   };
 
-  const calendarEvents = [
-    ...bookings.map((booking) => {
-      // Modern gradient colors based on status - using CSS classes
-      let backgroundColor, borderColor, classNames;
-      if (booking.status === "confirmed") {
-        backgroundColor = "#10b981";
-        borderColor = "#10b981";
-        classNames = "event-confirmed";
-      } else if (booking.status === "pending") {
-        backgroundColor = "#f59e0b";
-        borderColor = "#f59e0b";
-        classNames = "event-pending";
-      } else if (booking.status === "completed") {
-        backgroundColor = "#6366f1";
-        borderColor = "#6366f1";
-        classNames = "event-completed";
-      } else {
-        backgroundColor = "#6b7280";
-        borderColor = "#6b7280";
-        classNames = "event-cancelled";
-      }
-
-      return {
-        id: booking.id,
-        title: `${booking.serviceName} - ${booking.clientName}`,
-        start: booking.start,
-        end: booking.end,
-        backgroundColor,
-        borderColor,
-        classNames,
-        textColor: "#ffffff",
-        extendedProps: {
-          type: "booking",
-          bookingId: booking.id,
-        },
-      };
-    }),
+  const calendarEvents = useMemo(() => [
     ...blocks.map((block) => {
       let backgroundColor = "#8b5cf6"; // Default/Offline purple
       let classNames = "event-offline";
@@ -232,7 +180,7 @@ export default function CalendarPage() {
         const linkedBooking = typeof block.linkedBookingId === 'object' ? (block.linkedBookingId as any) : null;
         
         if (linkedBooking) {
-            title = `${linkedBooking.serviceName || 'Service'} - ${linkedBooking.clientName || 'Client'}`;
+            title = block.title || linkedBooking.serviceName || 'Service';
             
             if (linkedBooking.status === "confirmed") {
                 backgroundColor = "#10b981"; // Emerald
@@ -272,7 +220,7 @@ export default function CalendarPage() {
         },
       };
     }),
-  ];
+  ], [blocks]);
 
   return (
     <div className="space-y-4 md:space-y-6 animate-slide-up">
