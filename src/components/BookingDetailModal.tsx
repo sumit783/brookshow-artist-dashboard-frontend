@@ -31,7 +31,7 @@ export function BookingDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" hideClose>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Booking Details
@@ -99,16 +99,16 @@ export function BookingDetailModal({
               <div className="mt-2 space-y-1.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Price</span>
-                  <span className="font-semibold">₹{booking.price}</span>
+                  <span className="font-semibold">₹{(Math.ceil(booking.price * 100) / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Advance Paid</span>
-                  <span className="text-green-600 font-medium">₹{booking.paidAmount || 0}</span>
+                  <span className="text-green-600 font-medium">₹{(Math.ceil((booking.paidAmount || 0) * 100) / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm pt-1 border-t border-dashed">
                   <span className="font-medium">Pending Amount</span>
                   <span className="font-bold text-orange-600">
-                    ₹{Math.max(0, booking.price - (booking.paidAmount || 0))}
+                    ₹{(Math.ceil(Math.max(0, booking.price - (booking.paidAmount || 0)) * 100) / 100).toFixed(2)}
                   </span>
                 </div>
               </div>

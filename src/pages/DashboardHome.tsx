@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../services/apiClient";
 import { Artist } from "../types";
-import { User, Mail, Phone, MapPin, CheckCircle } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { config } from "../config";
 import { useNavigate } from "react-router-dom";
+import { WelcomeBanner } from "../components/dashboard/WelcomeBanner";
+import { ArtistProfileCard } from "../components/dashboard/ArtistProfileCard";
+import { DashboardStats } from "../components/dashboard/DashboardStats";
+import { MediaGallery } from "../components/dashboard/MediaGallery";
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -17,13 +16,6 @@ export default function DashboardHome() {
   const [profile, setProfile] = useState<any | null>(null);
   const [networkError, setNetworkError] = useState(false);
   const navigate = useNavigate();
-  
-  // Compute a base URL for static files (strip trailing / and optional /api)
-  const profileImagePath = profile?.profileImage || ""; // e.g. "/uploads/1762....png"
-  const normalizedPath =
-    profileImagePath.startsWith("/") ? profileImagePath : `/${profileImagePath}`;
-  const imgSrc =
-    import.meta.env.VITE_FILES_BASE_URL ? `${import.meta.env.VITE_FILES_BASE_URL}${normalizedPath}` : normalizedPath;
 
   useEffect(() => {
     const loadArtist = async () => {
@@ -40,7 +32,7 @@ export default function DashboardHome() {
     const loadProfile = async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        if(!token) {
+        if (!token) {
           navigate("/login", { replace: true });
           return;
         }
@@ -85,7 +77,7 @@ export default function DashboardHome() {
 
     loadArtist();
     loadProfile();
-  }, [user]);
+  }, [user, navigate]);
 
   useEffect(() => {
     if (!loading && !profile) {
@@ -94,166 +86,41 @@ export default function DashboardHome() {
   }, [loading, profile, navigate]);
 
   if (loading) {
-    return <div className="animate-pulse">Loading profile...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground animate-pulse font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
-  // if (!artist) {
-  //   return <div>Artist not found</div>;
-  // }
-
   return (
-    <div className="space-y-6 slide-in-up">
+    <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8 slide-in-up">
       {networkError && (
-        <div className="glass-modern p-4 rounded-md border border-red-300/30 bg-red-50/10 text-red-800 dark:text-red-200">
+        <div className="glass-modern p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400 font-medium animate-shake">
           Network connection required. Please check your internet connection.
         </div>
       )}
+
       {profile?.verificationStatus === "pending" && (
-        <div className="glass-modern p-4 rounded-md border border-yellow-300/30 bg-yellow-50/10 text-yellow-800 dark:text-yellow-200">
-          Your verification is pending. Admin can verify you soon.
+        <div className="glass-modern p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400 font-medium">
+          Your verification is pending. Our team will verify your profile shortly.
         </div>
       )}
-      <div className="glass-modern p-6 rounded-lg flex items-center gap-4">
-        <Avatar className="h-16 w-16">
-          <AvatarImage
-            src={imgSrc}
-            alt={profile?.userId?.displayName || artist?.displayName}
-            onError={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              img.src = ""; // trigger AvatarFallback when the image fails (e.g., 503)
-            }}
-          />
-          <AvatarFallback>{(profile?.userId?.displayName || artist?.displayName || "A").slice(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Welcome back, {profile?.userId?.displayName || artist?.displayName}!
-          </h1>
-          <p className="text-muted-foreground mt-2">Manage your artist profile and settings</p>
-        </div>
-        <div className="ml-auto">
-          <Button onClick={() => navigate("/edit-profile")} variant="outline">
-            Edit Profile
-          </Button>
-        </div>
-      </div>
 
-      <Card className="glass-modern hover-glow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Artist Profile
-            {(profile?.isAdminVerified || profile?.verificationStatus === "verified") && (
-              <Badge variant="default" className="ml-2">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Verified
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{profile?.userId?.email || artist?.email}</p>
-                </div>
-              </div>
+      {/* Welcome Section */}
+      <WelcomeBanner profile={profile} artist={artist} />
 
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{profile?.userId?.phone || artist?.phone}</p>
-                </div>
-              </div>
+      {/* Stats Section */}
+      <DashboardStats profile={profile} />
 
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">
-                    {profile?.location
-                      ? `${profile.location.city || ""}${profile.location.state ? ", " + profile.location.state : ""}${profile.location.country ? ", " + profile.location.country : ""}`
-                      : artist.city}
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* Profile Details */}
+      <ArtistProfileCard profile={profile} artist={artist} />
 
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Categories</p>
-              <div className="flex flex-wrap gap-2">
-                {(profile?.category || artist.categories).map((category: string) => (
-                  <Badge key={category} variant="accent">
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-
-              {(profile?.bio || artist.bio) && (
-                <div className="mt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Bio</p>
-                  <p className="text-sm">{profile?.bio || artist.bio}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="glass-modern hover-glow border-primary/20">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">0</p>
-              <p className="text-sm text-muted-foreground mt-2">Pending Bookings</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-modern hover-glow border-accent/20">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold text-accent drop-shadow-glow">0</p>
-              <p className="text-sm text-muted-foreground mt-2">Confirmed Bookings</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-modern hover-glow border-primary/20">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-4xl font-bold bg-gradient-accent bg-clip-text text-transparent">{Array.isArray(profile?.media) ? profile.media.length : 0}</p>
-              <p className="text-sm text-muted-foreground mt-2">Media Items</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {Array.isArray(profile?.media) && profile.media.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold">Media</h2>
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">{/* Masonry layout */}
-            {profile.media.map((m: any, idx: number) => {
-              const raw = typeof m?.url === "string" ? m.url : "";
-              const base = import.meta.env.VITE_FILES_BASE_URL as string | undefined;
-              const src = /^https?:\/\//.test(raw) ? raw : `${base || ""}${raw}`;
-              return (
-                <div key={m?._id || idx} className="mb-4 break-inside-avoid rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  {m?.type === "video" ? (
-                    <video src={src} className="w-full h-auto" controls />
-                  ) : (
-                    <img src={src} alt="media" className="w-full h-auto" loading="lazy" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Media Portfolio */}
+      <MediaGallery media={profile?.media} />
     </div>
   );
 }

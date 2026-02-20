@@ -33,7 +33,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -44,14 +44,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           // Mobile: fixed overlay that slides in/out
           "fixed left-0 top-16 z-50 h-screen w-64 glass-modern border-r border-border/50 transition-transform duration-300 ease-in-out",
           // Desktop: always visible, in normal flow
-          "md:relative md:top-0 md:h-screen md:z-auto md:flex-shrink-0",
+          "lg:relative lg:top-0 lg:h-screen lg:z-auto lg:flex-shrink-0",
           // Mobile visibility
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Close button for mobile */}
-          <div className="flex items-center justify-between p-4 md:hidden">
+          <div className="flex items-center justify-between p-4 lg:hidden">
             <span className="text-sm font-medium text-sidebar-foreground">Menu</span>
             <Button
               variant="ghost"

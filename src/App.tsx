@@ -28,14 +28,17 @@ function NetworkListener() {
     const goIssue = () => navigate("/network-issue", { replace: true });
     const onOffline = () => goIssue();
     const onIssue = () => goIssue();
+    const onUnauthorized = () => navigate("/login", { replace: true });
     window.addEventListener("offline", onOffline);
     window.addEventListener("network-issue", onIssue as EventListener);
+    window.addEventListener("unauthorized", onUnauthorized as EventListener);
     if (!navigator.onLine) {
       goIssue();
     }
     return () => {
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("network-issue", onIssue as EventListener);
+      window.removeEventListener("unauthorized", onUnauthorized as EventListener);
     };
   }, [navigate]);
   return null;

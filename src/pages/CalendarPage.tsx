@@ -13,15 +13,15 @@ import { BookingDetailsDialog } from "../components/calendar/BookingDetailsDialo
 export default function CalendarPage() {
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<string>("dayGridMonth");
-  
+
   // Dialog states
   const [showOfflineBookingModal, setShowOfflineBookingModal] = useState(false);
   const [showBookingDetailsModal, setShowBookingDetailsModal] = useState(false);
-  
+
   // Data states for dialogs
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
+
   // Loading states
   const [loadingBooking, setLoadingBooking] = useState(false);
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -42,22 +42,7 @@ export default function CalendarPage() {
     enabled: !!artistId,
   });
 
-  // Determine initial view based on screen size
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setCalendarView("timeGridDay");
-      } else if (window.innerWidth < 1024) {
-        setCalendarView("timeGridWeek");
-      } else {
-        setCalendarView("dayGridMonth");
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Initial view is set to Month
 
 
 
@@ -93,18 +78,18 @@ export default function CalendarPage() {
     const eventId = info.event.id;
     const eventProps = info.event.extendedProps;
     console.log("Event clicked:", eventId, eventProps);
-    
+
     let bookingId: string | null = null;
-    
+
     // Check if this is a calendar block with a linked booking
     if (eventProps?.type === "block" && eventProps?.linkedBookingId) {
       bookingId = eventProps.linkedBookingId;
-    } 
+    }
     // Or if it's a booking event directly
     else if (eventProps?.type === "booking" && eventProps?.bookingId) {
       bookingId = eventProps.bookingId;
     }
-    
+
     if (bookingId) {
       try {
         setLoadingBooking(true);
@@ -133,7 +118,7 @@ export default function CalendarPage() {
       // Format dates as YYYY-MM-DD (date only, no time)
       const startDate = new Date(selectedDate);
       const endDate = new Date(selectedDate);
-      
+
       // Format as YYYY-MM-DD
       const startAt = startDate.toISOString().split('T')[0];
       const endAt = endDate.toISOString().split('T')[0];
@@ -178,30 +163,30 @@ export default function CalendarPage() {
       } else if (block.type === "onlineBooking") {
         // Check if we have linked booking details to style it correctly
         const linkedBooking = typeof block.linkedBookingId === 'object' ? (block.linkedBookingId as any) : null;
-        
+
         if (linkedBooking) {
-            title = block.title || linkedBooking.serviceName || 'Service';
-            
-            if (linkedBooking.status === "confirmed") {
-                backgroundColor = "#10b981"; // Emerald
-                classNames = "event-confirmed";
-            } else if (linkedBooking.status === "pending") {
-                backgroundColor = "#f59e0b"; // Amber
-                classNames = "event-pending";
-            } else if (linkedBooking.status === "completed") {
-                backgroundColor = "#6366f1"; // Indigo
-                classNames = "event-completed";
-            } else {
-                backgroundColor = "#6b7280";
-                classNames = "event-cancelled";
-            }
-        } else {
-            // Fallback if no booking details but is online booking
-            backgroundColor = "#10b981";
+          title = block.title || linkedBooking.serviceName || 'Service';
+
+          if (linkedBooking.status === "confirmed") {
+            backgroundColor = "#10b981"; // Emerald
             classNames = "event-confirmed";
+          } else if (linkedBooking.status === "pending") {
+            backgroundColor = "#f59e0b"; // Amber
+            classNames = "event-pending";
+          } else if (linkedBooking.status === "completed") {
+            backgroundColor = "#6366f1"; // Indigo
+            classNames = "event-completed";
+          } else {
+            backgroundColor = "#6b7280";
+            classNames = "event-cancelled";
+          }
+        } else {
+          // Fallback if no booking details but is online booking
+          backgroundColor = "#10b981";
+          classNames = "event-confirmed";
         }
       }
-      
+
       return {
         id: block.id,
         title: title,
@@ -224,15 +209,15 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-slide-up">
-      <CalendarHeader 
+      <CalendarHeader
         onAddOfflineBooking={() => {
           /* Add button logic if uncommented in header */
-        }} 
+        }}
       />
 
       <CalendarLegend />
 
-      <CalendarView 
+      <CalendarView
         events={calendarEvents}
         view={calendarView}
         onViewChange={setCalendarView}

@@ -65,6 +65,17 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
 
   const response = await fetch(url, { ...init, headers });
 
+  // Handle 401 Unauthorized
+  if (response.status === 401) {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    try {
+      window.dispatchEvent(new Event("unauthorized"));
+    } catch (_) {
+      // ignore
+    }
+  }
+
   // Log response for services endpoint
   if (import.meta.env.DEV && path.includes("services")) {
     console.log("=== apiFetch Response ===");

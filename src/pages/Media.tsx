@@ -1,18 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../services/apiClient";
 import { storage } from "../services/storage";
 import { syncQueue } from "../services/syncQueue";
 import { MediaItem } from "../types";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { useToast } from "../hooks/use-toast";
-import { Upload, Trash2, Star, Image as ImageIcon, Eye } from "lucide-react";
-import { Badge } from "../components/ui/badge";
 import { config } from "../config";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { MediaUpload } from "../components/media/MediaUpload";
+import { MediaGrid } from "../components/media/MediaGrid";
+import { MediaPreview } from "../components/media/MediaPreview";
 
 export default function Media() {
   const { user } = useAuth();
@@ -43,7 +41,7 @@ export default function Media() {
 
       // Fetch from Backend: GET /artist/profile/media
       const token = localStorage.getItem("auth_token");
-      if(!token) {
+      if (!token) {
         setMedia([]);
         setLoading(false);
         navigate("/login", { replace: true });
@@ -63,7 +61,7 @@ export default function Media() {
         },
       });
       const payload = resp.data;
-      
+
       const items = Array.isArray(payload?.items) ? payload.items : [];
       const mapped: MediaItem[] = items.map((it: any, idx: number) => {
         const rawUrl = typeof it?.url === "string"
@@ -107,12 +105,14 @@ export default function Media() {
   };
 
   const uploadToServer = async (files: FileList | null) => {
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (!files) return;
+
+    const MAX_SIZE = 100 * 1024 * 1024; // 100MB
     for (let i = 0; i < files.length; i++) {
       if (files[i].size > MAX_SIZE) {
         toast({
           title: "File too large",
-          description: `"${files[i].name}" exceeds the 5MB limit.`,
+          description: `"${files[i].name}" exceeds the 100MB limit.`,
           variant: "destructive",
         });
         return;
@@ -174,7 +174,7 @@ export default function Media() {
       toast({ title: "Upload failed", description: error instanceof Error ? error.message : "", variant: "destructive" });
     } finally {
       setUploading(false);
-      const input = document.getElementById("server-file-input") as HTMLInputElement | null;
+      const input = document.getElementById("file-input") as HTMLInputElement | null;
       if (input) input.value = ""; // allow selecting the same files again
     }
   };
@@ -203,156 +203,42 @@ export default function Media() {
     }
   };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadToServer(e.dataTransfer.files);
-  }, [media, user]);
-
   if (loading) {
-    return <div className="animate-pulse">Loading media...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground animate-pulse font-medium">Loading your media portfolio...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8 animate-slide-up">
       <div>
-        <h1 className="text-3xl font-bold">Media</h1>
-        <p className="text-muted-foreground">Manage your portfolio images and videos</p>
+        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Media</h1>
+        <p className="text-muted-foreground mt-2 text-lg">Manage your portfolio images and videos</p>
       </div>
 
       {/* Upload Area */}
-      {/* <div className="flex items-center gap-2">
-        <Button onClick={() => document.getElementById("server-file-input")?.click()} disabled={uploading}>
-          {uploading ? "Uploading..." : "Upload to Server"}
-        </Button>
-        <input
-          id="server-file-input"
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          className="hidden"
-          aria-label="Upload media files to server"
-          onChange={(e) => uploadToServer(e.target.files)}
-          disabled={uploading}
-        />
-      </div> */}
-
-      <Card
-        className="border-2 p-6 border-dashed text-center cursor-pointer hover:border-primary transition-colors"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        onClick={() => document.getElementById("file-input")?.click()}
-      >
-        <input
-          id="file-input"
-          type="file"
-          multiple
-          accept="image/*,video/*"
-          className="hidden"
-          aria-label="Select media files"
-          onChange={(e) => uploadToServer(e.target.files)}
-          disabled={uploading}
-        />
-        
-        <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold mb-2">
-          {uploading ? "Uploading..." : "Upload Media"}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Drag and drop files here, or click to browse
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Max size: 5MB • Supports: Images (JPG, PNG, GIF) and Videos (MP4, MOV)
-        </p>
-      </Card>
+      <MediaUpload onUpload={uploadToServer} uploading={uploading} />
 
       {/* Media Masonry Grid */}
-      {media.length === 0 ? (
-        <div className="text-center py-12">
-          <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">No media uploaded yet</p>
-        </div>
-      ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
-          {media.map((item) => (
-            <Card key={item.id} className="mb-4 break-inside-avoid overflow-hidden group relative">
-              <div className="relative">
-                {item.type === "image" ? (
-                  <img
-                    src={item.dataUrl || item.url}
-                    alt={item.fileName}
-                    className="w-full h-auto object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <video
-                    src={item.dataUrl || item.url}
-                    className="w-full h-auto object-cover"
-                    controls={false}
-                  />
-                )}
+      <MediaGrid
+        media={media}
+        onPreview={(item) => {
+          setPreviewItem(item);
+          setPreviewOpen(true);
+        }}
+        onDelete={handleDelete}
+      />
 
-                {item.syncStatus === "pending" && (
-                  <Badge className="absolute top-2 left-2" variant="secondary">
-                    Syncing...
-                  </Badge>
-                )}
-
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    onClick={() => {
-                      setPreviewItem(item);
-                      setPreviewOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="secondary">
-                    <Star className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="truncate max-w-[70%]" title={item.fileName}>{item.fileName}</span>
-                <span className="flex items-center gap-1">
-                  <Badge variant="outline" className="text-[10px] px-1 py-0">
-                    {item.type === "video" ? "Video" : "Image"}
-                  </Badge>
-                </span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{previewItem?.fileName || "Preview"}</DialogTitle>
-          </DialogHeader>
-          <div className="w-full h-full object-contain">
-            {previewItem?.type === "video" ? (
-              <video src={previewItem.url} className="w-full h-auto object-contain" controls />
-            ) : (
-              <img src={previewItem?.url} alt={previewItem?.fileName} className="w-full h-auto object-contain" />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MediaPreview
+        open={previewOpen}
+        item={previewItem}
+        onOpenChange={setPreviewOpen}
+      />
     </div>
   );
 }

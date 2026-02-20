@@ -74,12 +74,12 @@ export function Header({ onMenuClick }: HeaderProps) {
               variant="ghost"
               size="icon"
               onClick={onMenuClick}
-              className="md:hidden hover:bg-accent/10"
+              className="lg:hidden hover:bg-accent/10"
             >
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          
+
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               {config.brandName}
@@ -118,7 +118,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 </span>
               </>
             )}
-            
+
             {pendingCount > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {pendingCount} pending
