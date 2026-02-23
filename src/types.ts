@@ -206,6 +206,7 @@ export interface WalletTransaction {
   status: "pending" | "completed" | "failed";
   createdAt: string;
   referenceId?: string; // e.g., Booking ID or Withdrawal ID
+  adminNote?: string;
 }
 
 export interface WithdrawalRequest {
@@ -215,5 +216,5 @@ export interface WithdrawalRequest {
   requestedAt: string;
   processedAt?: string;
   bankDetailSnapshot?: BankDetail;
-  adminNotes?: string;
+  adminNote?: string;
 }

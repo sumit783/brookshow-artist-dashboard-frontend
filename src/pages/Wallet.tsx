@@ -21,7 +21,24 @@ export default function Wallet() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [selectedBank, setSelectedBank] = useState<BankDetail | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  const toggleNote = (id: string) => {
+    const newExpanded = new Set(expandedNotes);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedNotes(newExpanded);
+  };
+
+  const truncateWords = (text: string, limit: number) => {
+    const words = text.split(/\s+/);
+    if (words.length <= limit) return text;
+    return words.slice(0, limit).join(" ") + "...";
+  };
 
   useEffect(() => {
     fetchWalletData();
@@ -36,7 +53,7 @@ export default function Wallet() {
       ]);
       setStats(statsData);
       setTransactions(transactionsData);
-      
+
       // Also fetch bank details to set default for withdrawal
       const bankData = await apiClient.bankDetails.getBankDetails();
       if (bankData.length > 0) {
@@ -164,31 +181,49 @@ export default function Wallet() {
               <p className="text-center text-muted-foreground py-8">No transactions yet.</p>
             ) : (
               transactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${tx.type === "credit" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
-                      {tx.type === "credit" ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                <div key={tx.id} className="flex flex-col p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
+                  <div className="flex items-start justify-between w-full gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`p-2 rounded-full shrink-0 mt-0.5 ${tx.type === "credit" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
+                        {tx.type === "credit" ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm sm:text-base break-words">{tx.description}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{new Date(tx.createdAt).toLocaleDateString()} • {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <div className={`font-bold text-sm sm:text-base ${tx.type === "credit" ? "text-green-600" : "text-orange-600"}`}>
+                        {tx.type === "credit" ? "+" : "-"}{formatCurrency(tx.amount)}
+                      </div>
+                      <Badge
+                        variant={
+                          tx.status === "completed" ? "default" :
+                            tx.status === "pending" ? "outline" :
+                              "destructive"
+                        }
+                        className="text-[10px] uppercase font-bold px-2 h-5 py-0"
+                      >
+                        {tx.status}
+                      </Badge>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div className={`font-bold ${tx.type === "credit" ? "text-green-600" : "text-orange-600"}`}>
-                      {tx.type === "credit" ? "+" : "-"}{formatCurrency(tx.amount)}
+                  {tx.status === "failed" && tx.adminNote && (
+                    <div className="mt-3 pt-3 border-t w-full text-xs">
+                      <p className="font-semibold text-destructive mb-1">Reason for Rejection:</p>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {expandedNotes.has(tx.id) ? tx.adminNote : truncateWords(tx.adminNote, 20)}
+                        {tx.adminNote.split(/\s+/).length > 20 && (
+                          <button
+                            onClick={() => toggleNote(tx.id)}
+                            className="ml-1 text-primary hover:underline font-medium"
+                          >
+                            {expandedNotes.has(tx.id) ? "Read Less" : "Read More"}
+                          </button>
+                        )}
+                      </p>
                     </div>
-                    <Badge 
-                      variant={
-                        tx.status === "completed" ? "default" : 
-                        tx.status === "pending" ? "outline" : 
-                        "destructive"
-                      }
-                      className="text-[10px] h-4 py-0"
-                    >
-                      {tx.status}
-                    </Badge>
-                  </div>
+                  )}
                 </div>
               ))
             )}
@@ -201,8 +236,8 @@ export default function Wallet() {
         isOpen={isBankDetailsOpen}
         onClose={() => setIsBankDetailsOpen(false)}
         onSelect={(bank) => {
-           setSelectedBank(bank);
-           // Optionally auto-open withdraw dialog if we were trying to withdraw
+          setSelectedBank(bank);
+          // Optionally auto-open withdraw dialog if we were trying to withdraw
         }}
       />
 
@@ -220,13 +255,13 @@ export default function Wallet() {
               <p className="text-sm font-medium">To Account:</p>
               <div className="flex justify-between items-center mt-1">
                 <div>
-                   <p className="text-sm font-bold">{selectedBank?.type === "bank" ? selectedBank.bankName : "UPI ID"}</p>
-                   <p className="text-xs text-muted-foreground">
-                    {selectedBank?.type === "bank" 
-                      ? `****${selectedBank.accountNumber?.slice(-4)}` 
+                  <p className="text-sm font-bold">{selectedBank?.type === "bank" ? selectedBank.bankName : "UPI ID"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedBank?.type === "bank"
+                      ? `****${selectedBank.accountNumber?.slice(-4)}`
                       : selectedBank?.upiId
                     }
-                   </p>
+                  </p>
                 </div>
                 <Button type="button" variant="link" size="sm" onClick={() => { setIsWithdrawOpen(false); setIsBankDetailsOpen(true); }}>
                   Change

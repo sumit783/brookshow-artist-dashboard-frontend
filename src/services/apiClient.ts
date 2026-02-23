@@ -1244,6 +1244,7 @@ export const walletApi = {
         status: tx.status || "pending",
         createdAt: tx.createdAt || new Date().toISOString(),
         referenceId: tx.referenceId || undefined,
+        adminNote: tx.adminNote || undefined,
       }));
     } catch (error) {
       console.error("Error fetching transactions:", error);
