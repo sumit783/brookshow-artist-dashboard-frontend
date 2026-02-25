@@ -8,15 +8,14 @@ interface ArtistProfileCardProps {
     artist: Artist | null;
 }
 
-export function ArtistProfileCard({ profile, artist }: ArtistProfileCardProps) {
-    const email = profile?.userId?.email || artist?.email;
-    const phone = profile?.userId?.phone || artist?.phone;
-    const location = profile?.location
-        ? `${profile.location.city || ""}${profile.location.state ? ", " + profile.location.state : ""}${profile.location.country ? ", " + profile.location.country : ""}`
-        : artist?.city;
-    const categories = profile?.category || artist?.categories || [];
-    const bio = profile?.bio || artist?.bio;
-    const isVerified = profile?.isAdminVerified || profile?.verificationStatus === "verified";
+export function ArtistProfileCard({ profile, artist: propsArtist }: ArtistProfileCardProps) {
+    const artist = profile || propsArtist;
+    const email = artist?.email;
+    const phone = artist?.phone;
+    const location = artist?.city;
+    const categories = artist?.categories || [];
+    const bio = artist?.bio;
+    const isVerified = artist?.verified;
 
     return (
         <Card className="glass-modern hover-glow h-full">

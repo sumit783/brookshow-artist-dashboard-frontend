@@ -5,24 +5,26 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ profile }: DashboardStatsProps) {
-    const mediaCount = Array.isArray(profile?.media) ? profile.media.length : 0;
+    const mediaCount = profile?.stats?.mediaCount ?? (Array.isArray(profile?.media) ? profile.media.length : 0);
+    const confirmedBookings = profile?.stats?.confirmedBookings ?? 0;
+    const completedBookings = profile?.stats?.completedBookings ?? 0;
 
     const stats = [
         {
-            label: "Pending Bookings",
-            value: "0",
+            label: "Confirmed Bookings",
+            value: confirmedBookings.toString(),
             gradient: "bg-gradient-primary",
             borderColor: "border-primary/20",
         },
         {
-            label: "Confirmed Bookings",
-            value: "0",
+            label: "Completed Bookings",
+            value: completedBookings.toString(),
             gradient: "text-accent",
             borderColor: "border-accent/20",
             isAccent: true,
         },
         {
-            label: "Media Items",
+            label: "Media Count",
             value: mediaCount.toString(),
             gradient: "bg-gradient-accent",
             borderColor: "border-primary/20",

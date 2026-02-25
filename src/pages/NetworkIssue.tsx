@@ -18,9 +18,6 @@ export default function NetworkIssue() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex gap-3 justify-center">
-            <Button onClick={() => window.location.reload()} variant="default">
-              Retry
-            </Button>
             <Button asChild variant="outline">
               <Link to="/">Go to Dashboard</Link>
             </Button>

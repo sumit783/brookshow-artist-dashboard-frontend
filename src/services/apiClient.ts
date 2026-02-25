@@ -356,6 +356,82 @@ export const artistsApi = {
 
     return data;
   },
+
+  async completeProfile(payload: ProfilePayload): Promise<{ success: boolean; message: string }> {
+    // Initial profile creation uses POST
+    const formData = new FormData();
+
+    if (payload.profileImage) {
+      formData.append("profileImage", payload.profileImage);
+    }
+    formData.append("bio", payload.bio);
+    formData.append("category", payload.category.join(",")); // Comma-separated string
+    formData.append("city", payload.city);
+    formData.append("state", payload.state);
+    formData.append("country", payload.country);
+    formData.append("eventPricing", JSON.stringify(payload.eventPricing));
+
+    const response = await apiFetch("/artist/profile", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      let message = "Profile creation failed";
+      try {
+        const data = JSON.parse(text);
+        message = data.message || data.error || message;
+      } catch (_) { }
+      throw new Error(message);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Profile creation failed");
+    }
+
+    return data;
+  },
+
+  async getProfile(): Promise<Artist> {
+    try {
+      const response = await apiFetch("/artist/profile");
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Failed to load profile: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const artist = data.success ? data : data.artist;
+
+      if (!artist) {
+        throw new Error("Artist profile not found");
+      }
+
+      // Map API response to Artist type
+      const mappedArtist: Artist = {
+        id: artist._id,
+        displayName: artist.userId?.displayName || artist.displayName || "",
+        email: artist.userId?.email || artist.email || "",
+        phone: artist.userId?.phone || artist.phone || "",
+        city: artist.location?.city || artist.city || "",
+        categories: Array.isArray(artist.category) ? artist.category : (Array.isArray(artist.categories) ? artist.categories : []),
+        bio: artist.bio || "",
+        verified: artist.isVerified || artist.verified || false,
+        media: Array.isArray(artist.media) ? artist.media : [],
+        coverImageId: artist.profileImage || artist.coverImageId || undefined,
+        createdAt: artist.createdAt || new Date().toISOString(),
+        stats: artist.stats || undefined,
+      };
+
+      return mappedArtist;
+    } catch (error) {
+      console.error("Error in getProfile:", error);
+      throw error;
+    }
+  },
 };
 
 // Services API
@@ -601,7 +677,7 @@ export const servicesApi = {
 export const bookingsApi = {
   async getBookings(): Promise<Booking[]> {
     try {
-      const response = await apiFetch("/bookings");
+      const response = await apiFetch("/artist/bookings");
       console.log("Bookings response status:", response.status, response.statusText);
 
       if (!response.ok) {
@@ -655,7 +731,7 @@ export const bookingsApi = {
   async getById(id: string): Promise<Booking> {
     try {
       console.log("Fetching booking by ID:", id);
-      const response = await apiFetch(`/bookings/${id}`);
+      const response = await apiFetch(`/artist/bookings/${id}`);
       console.log("Booking response status:", response.status, response.statusText);
 
       if (!response.ok) {
@@ -722,7 +798,7 @@ export const bookingsApi = {
         notes: booking.notes || undefined,
       };
 
-      const response = await apiFetch("/bookings/", {
+      const response = await apiFetch("/artist/bookings/", {
         method: "POST",
         body: JSON.stringify(createPayload),
       });

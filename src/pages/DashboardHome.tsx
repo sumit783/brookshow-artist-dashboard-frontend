@@ -18,66 +18,26 @@ export default function DashboardHome() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadArtist = async () => {
-      if (user?.artistId) {
-        try {
-          const data = await apiClient.artists.getById(user.artistId);
-          setArtist(data);
-        } catch (error) {
-          console.error("Failed to load artist:", error);
-        }
-      }
-    };
-
-    const loadProfile = async () => {
+    const loadDashboardData = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
-          navigate("/login", { replace: true });
-          return;
-        }
-        const headers = new Headers();
-        headers.set("Content-Type", "application/json");
-        if (config.apiKey) {
-          headers.set("x_api_key", config.apiKey);
-          headers.set("x-api-key", config.apiKey);
-        }
-        if (token) headers.set("Authorization", `Bearer ${token}`);
-        const base = (config.apiBaseUrl || "").replace(/\/$/, "");
-        const response = await fetch(`${base}/artist/profile`, { headers });
-        if (!response.ok) {
-          const text = await response.text();
-          if (text && text.includes("Network connection required")) {
-            setNetworkError(true);
-            return;
-          }
-          if (response.status === 404 || (text && text.includes("Artist profile not found"))) {
-            navigate("/complete-profile", { replace: true });
-            return;
-          }
-          throw new Error(text || "Failed to load profile");
-        }
-        const data = await response.json();
-        setProfile(data);
+        const data = await apiClient.artists.getProfile();
+        setArtist(data);
+        setProfile(data); // Using artist as profile for backward compatibility in the component
       } catch (err) {
-        console.error("Failed to load profile:", err);
+        console.error("Failed to load dashboard data:", err);
         const message = err instanceof Error ? err.message : String(err);
         if (message.includes("Network connection required")) {
           setNetworkError(true);
-          return;
-        }
-        if (message && message.includes("Artist profile not found")) {
+        } else if (message.includes("Artist profile not found") || message.includes("404")) {
           navigate("/complete-profile", { replace: true });
-          return;
         }
       } finally {
         setLoading(false);
       }
     };
 
-    loadArtist();
-    loadProfile();
-  }, [user, navigate]);
+    loadDashboardData();
+  }, [navigate]);
 
   useEffect(() => {
     if (!loading && !profile) {

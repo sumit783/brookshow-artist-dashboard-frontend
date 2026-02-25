@@ -136,23 +136,23 @@ const CompleteProfile = () => {
         eventPricing,
       };
 
-      const response = await apiClient.artists.updateProfile(payload);
-      console.log("RESPONSE IS ",response);
-      // Redirect to dashboard on successful profile creation
+      const response = await apiClient.artists.completeProfile(payload);
       if (response.success) {
         navigate("/", { replace: true });
       }
     } catch (err: any) {
+      console.error("Profile completion error:", err);
       let message = "Failed to complete profile";
       if (err?.message) {
         message = String(err.message);
         try {
+          // If it's a JSON stringified error, parse it
           const parsed = JSON.parse(message);
           if (parsed && typeof parsed === "object" && parsed.message) {
             message = String(parsed.message);
           }
         } catch (_) {
-          // not JSON, keep as-is
+          // Not JSON, keep as is
         }
       }
       setError(message);

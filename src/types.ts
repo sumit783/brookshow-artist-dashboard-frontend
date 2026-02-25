@@ -1,5 +1,11 @@
 // Type definitions for BrookShow
 
+export interface ArtistStats {
+  completedBookings: number;
+  confirmedBookings: number;
+  mediaCount: number;
+}
+
 export interface Artist {
   id: string;
   displayName: string;
@@ -12,6 +18,7 @@ export interface Artist {
   media: MediaItem[];
   coverImageId?: string;
   createdAt: string;
+  stats?: ArtistStats;
 }
 
 export interface Service {

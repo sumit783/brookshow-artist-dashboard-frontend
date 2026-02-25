@@ -8,14 +8,24 @@ interface WelcomeBannerProps {
     artist: Artist | null;
 }
 
-export function WelcomeBanner({ profile, artist }: WelcomeBannerProps) {
+export function WelcomeBanner({ profile, artist: propsArtist }: WelcomeBannerProps) {
     const navigate = useNavigate();
+    const artist = profile || propsArtist; // DashboardHome passes mapped artist into profile
 
-    const profileImagePath = profile?.profileImage || "";
-    const normalizedPath = profileImagePath.startsWith("/") ? profileImagePath : `/${profileImagePath}`;
-    const imgSrc = import.meta.env.VITE_FILES_BASE_URL ? `${import.meta.env.VITE_FILES_BASE_URL}${normalizedPath}` : normalizedPath;
+    const profileImagePath = artist?.coverImageId || "";
+    let imgSrc = "";
 
-    const displayName = profile?.userId?.displayName || artist?.displayName || "Artist";
+    if (profileImagePath) {
+        if (/^https?:\/\//.test(profileImagePath)) {
+            imgSrc = profileImagePath;
+        } else {
+            const normalizedPath = profileImagePath.startsWith("/") ? profileImagePath : `/${profileImagePath}`;
+            const base = import.meta.env.VITE_FILES_BASE_URL as string | undefined;
+            imgSrc = base ? `${base}${normalizedPath}` : normalizedPath;
+        }
+    }
+
+    const displayName = artist?.displayName || "Artist";
 
     return (
         <div className="glass-modern p-6 rounded-lg flex flex-col sm:flex-row items-center gap-6">
