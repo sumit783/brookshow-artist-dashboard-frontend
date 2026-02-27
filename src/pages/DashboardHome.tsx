@@ -64,11 +64,18 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {profile?.verified === false && (
+      {profile?.verificationStatus === "pending" && (
         <div className="glass-modern p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400 font-medium">
           Your verification is pending. Our team will verify your profile shortly.
         </div>
       )}
+      {
+        profile?.verificationStatus === "rejected" && (
+          <div className="glass-modern p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400 font-medium">
+            Your verification has been rejected. Reason: {profile?.verificationNote}
+          </div>
+        )
+      }
 
       {/* Welcome Section */}
       <WelcomeBanner profile={profile} artist={artist} />

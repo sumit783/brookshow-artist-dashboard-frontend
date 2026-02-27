@@ -14,7 +14,9 @@ export interface Artist {
   city: string;
   categories: string[];
   bio: string;
+  verificationStatus: string;
   verified: boolean;
+  verificationNote: string;
   media: MediaItem[];
   coverImageId?: string;
   createdAt: string;
