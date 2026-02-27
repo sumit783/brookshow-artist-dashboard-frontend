@@ -64,7 +64,7 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {profile?.verificationStatus === "pending" && (
+      {profile?.verified === false && (
         <div className="glass-modern p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400 font-medium">
           Your verification is pending. Our team will verify your profile shortly.
         </div>
