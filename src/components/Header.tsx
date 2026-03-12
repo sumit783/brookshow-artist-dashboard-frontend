@@ -15,6 +15,7 @@ import {
 import { Badge } from "./ui/badge";
 import { config } from "../config";
 import { useToast } from "../hooks/use-toast";
+import logo from "../assets/logo.webp";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -81,9 +82,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           )}
 
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              {config.brandName}
-            </span>
+            <img src={logo} alt={config.brandName} className="h-8 md:h-12 w-auto" />
           </div>
         </div>
 

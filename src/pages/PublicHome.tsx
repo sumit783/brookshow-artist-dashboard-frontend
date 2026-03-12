@@ -3,6 +3,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Ticket, Users, Calendar, Star } from "lucide-react";
 import { config } from "../config";
+import logo from "../assets/logo.webp";
 
 export default function PublicHome() {
   return (
@@ -10,8 +11,8 @@ export default function PublicHome() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6 max-w-3xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold animate-slide-up">
-            <span className="gradient-text">{config.brandName}</span>
+          <h1 className="animate-slide-up flex justify-center">
+            <img src={logo} alt={config.brandName} className="h-20 w-auto" />
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground animate-slide-up">
             {config.tagline}
