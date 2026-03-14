@@ -705,6 +705,7 @@ export const bookingsApi = {
 
       // Map API response to Booking type
       const mappedBookings = data.bookings.map((booking: any) => ({
+        _id: booking._id,
         id: booking._id,
         clientName: booking.clientId?.displayName || booking.clientName || "Unknown Client",
         clientPhone: booking.clientId?.phone || booking.clientPhone || "",
@@ -758,10 +759,13 @@ export const bookingsApi = {
       // Map API response to Booking type
       // Note: The API response may have client info in different fields
       const mappedBooking: Booking = {
+        _id: booking._id,
         id: booking._id,
-        clientName: booking.clientName || booking.client?.name || "Unknown Client",
-        clientPhone: booking.clientPhone || booking.client?.phone || "",
-        clientPhoneMasked: booking.clientPhoneMasked || booking.client?.phoneMasked || "",
+        clientName: booking.clientId?.displayName || booking.clientName || booking.client?.name || "Unknown Client",
+        clientPhone: booking.clientId?.phone || booking.clientPhoneNumber || booking.clientPhone || booking.client?.phone || "",
+        clientPhoneMasked: booking.clientId?.phone 
+          ? booking.clientId.phone.replace(/\d(?=\d{4})/g, "*") 
+          : (booking.clientPhoneMasked || booking.client?.phoneMasked || ""),
         start: booking.startAt || booking.start,
         end: booking.endAt || booking.end,
         serviceId: booking.serviceId?._id || booking.serviceId || "",
@@ -776,6 +780,19 @@ export const bookingsApi = {
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
+        
+        // Event Mapping
+        eventName: booking.eventName || null,
+        eventAddress: booking.eventAddress || null,
+        eventCity: booking.eventCity || null,
+        eventState: booking.eventState || null,
+        eventCountry: booking.eventCountry || null,
+        eventPincode: booking.eventPincode || null,
+        eventLat: booking.eventLat || null,
+        eventLng: booking.eventLng || null,
+        commissionAmount: booking.commissionAmount || undefined,
+        paymentStatus: booking.paymentStatus || undefined,
+        razorpayOrderId: booking.razorpayOrderId || undefined,
       };
 
       console.log("Mapped booking:", mappedBooking);
@@ -846,6 +863,7 @@ export const bookingsApi = {
         createdAt: createdBooking.createdAt,
         updatedAt: createdBooking.updatedAt,
         syncStatus: "synced",
+        _id: ""
       };
 
       console.log("Mapped created booking:", mappedBooking);
@@ -897,6 +915,7 @@ export const bookingsApi = {
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
+        _id: ""
       };
 
       return mappedBooking;
@@ -950,6 +969,7 @@ export const bookingsApi = {
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
+        _id: ""
       };
 
       console.log("Mapped offline booking:", mappedBooking);

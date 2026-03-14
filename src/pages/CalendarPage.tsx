@@ -2,13 +2,13 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../services/apiClient";
-import { Booking, CalendarBlock } from "../types";
+import { Booking } from "../types";
 import { useToast } from "../hooks/use-toast";
 import { CalendarHeader } from "../components/calendar/CalendarHeader";
 import { CalendarLegend } from "../components/calendar/CalendarLegend";
 import { CalendarView } from "../components/calendar/CalendarView";
 import { AddOfflineBookingDialog, ServiceOption, OfflineBookingData } from "../components/calendar/AddOfflineBookingDialog";
-import { BookingDetailsDialog } from "../components/calendar/BookingDetailsDialog";
+import { BookingDetailModal } from "../components/BookingDetailModal";
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -79,6 +79,11 @@ export default function CalendarPage() {
     const eventProps = info.event.extendedProps;
     console.log("Event clicked:", eventId, eventProps);
 
+    // If it's just a busy block, we don't have details to show
+    if (eventProps?.type === "block" && !eventProps?.linkedBookingId && info.event.classNames.includes("event-busy")) {
+      return;
+    }
+
     let bookingId: string | null = null;
 
     // Check if this is a calendar block with a linked booking
@@ -98,15 +103,24 @@ export default function CalendarPage() {
         setSelectedBooking(booking);
       } catch (error) {
         console.error("Failed to load booking details:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load booking details",
-          variant: "destructive",
-        });
-        setShowBookingDetailsModal(false);
+        // If it's a 404, we can extract details from the calendar block if available
+        if (eventProps.bookingDetails) {
+           setSelectedBooking(eventProps.bookingDetails);
+        } else {
+          toast({
+            title: "Not Found",
+            description: "No detailed booking information available for this block.",
+            variant: "destructive",
+          });
+          setShowBookingDetailsModal(false);
+        }
       } finally {
         setLoadingBooking(false);
       }
+    } else if (eventProps?.type === "block" && eventProps?.bookingDetails) {
+      // Try using the embedded details if available
+      setSelectedBooking(eventProps.bookingDetails);
+      setShowBookingDetailsModal(true);
     }
   };
 
@@ -233,11 +247,10 @@ export default function CalendarPage() {
         onSubmit={handleCreateOfflineBooking}
       />
 
-      <BookingDetailsDialog
+      <BookingDetailModal
         open={showBookingDetailsModal}
-        onOpenChange={setShowBookingDetailsModal}
+        onClose={() => setShowBookingDetailsModal(false)}
         booking={selectedBooking}
-        loading={loadingBooking}
       />
     </div>
   );

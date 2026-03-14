@@ -46,6 +46,7 @@ export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
 export type BookingSource = "user" | "planner" | "offline";
 
 export interface Booking {
+  _id: string;
   id: string;
   clientName: string;
   clientPhone: string;
@@ -64,6 +65,19 @@ export interface Booking {
   createdAt: string;
   updatedAt: string;
   syncStatus?: SyncStatus;
+  
+  // Event details
+  eventName?: string | null;
+  eventAddress?: string | null;
+  eventCity?: string | null;
+  eventState?: string | null;
+  eventCountry?: string | null;
+  eventPincode?: string | null;
+  eventLat?: string | null;
+  eventLng?: string | null;
+  commissionAmount?: number;
+  paymentStatus?: string;
+  razorpayOrderId?: string;
 }
 
 export type CalendarBlockType = "busy" | "offline-booking" | "onlineBooking";
