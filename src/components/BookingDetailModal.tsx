@@ -58,16 +58,16 @@ export function BookingDetailModal({
   const endDate = new Date(displayData.endAt || displayData.end);
 
   // Extract client details based on the structure (detailed vs basic)
-  const clientName = displayData.clientId?.displayName || displayData.clientName || "Unknown Client";
-  const clientPhone = displayData.clientPhoneNumber || displayData.clientId?.phone || displayData.clientPhone || "Unknown Phone";
-  const clientEmail = displayData.clientId?.email || "";
+  const clientName = displayData.clientName || displayData.clientId?.displayName || "Unknown Client";
+  const clientPhone = displayData.clientPhone || displayData.clientPhoneNumber || displayData.clientId?.phone || "Unknown Phone";
+  const clientEmail = displayData.clientEmail || displayData.clientId?.email || "";
   
   const fullClientAddress = [
-    displayData.clientId?.address || displayData.clientAddress,
-    displayData.clientId?.city || displayData.clientCity,
-    displayData.clientId?.state || displayData.clientState,
-    displayData.clientId?.country || displayData.clientCountry,
-    displayData.clientId?.pincode || displayData.clientPincode
+    displayData.clientAddress || displayData.clientId?.address,
+    displayData.clientCity || displayData.clientId?.city,
+    displayData.clientState || displayData.clientId?.state,
+    displayData.clientCountry || displayData.clientId?.country,
+    displayData.clientPincode || displayData.clientId?.pincode
   ].filter(Boolean).join(", ");
   
   // Extract service details

@@ -726,6 +726,11 @@ export const bookingsApi = {
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced" as const,
+
+        // Basic event info for fallback
+        eventName: booking.eventName || null,
+        eventAddress: booking.eventAddress || null,
+        eventCity: booking.eventCity || null,
       }));
 
       return mappedBookings;
@@ -757,12 +762,12 @@ export const bookingsApi = {
       const booking = data.booking;
 
       // Map API response to Booking type
-      // Note: The API response may have client info in different fields
+      // Priority: explicitly provided names/phones first, then clientId fields
       const mappedBooking: Booking = {
         _id: booking._id,
         id: booking._id,
-        clientName: booking.clientId?.displayName || booking.clientName || booking.client?.name || "Unknown Client",
-        clientPhone: booking.clientId?.phone || booking.clientPhoneNumber || booking.clientPhone || booking.client?.phone || "",
+        clientName: booking.clientName || booking.clientId?.displayName || booking.client?.name || "Unknown Client",
+        clientPhone: booking.clientPhoneNumber || booking.clientPhone || booking.clientId?.phone || booking.client?.phone || "",
         clientPhoneMasked: booking.clientId?.phone 
           ? booking.clientId.phone.replace(/\d(?=\d{4})/g, "*") 
           : (booking.clientPhoneMasked || booking.client?.phoneMasked || ""),
@@ -780,6 +785,14 @@ export const bookingsApi = {
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         syncStatus: "synced",
+        
+        // Client details from nested clientId if available
+        clientEmail: booking.clientId?.email || null,
+        clientAddress: booking.clientId?.address || null,
+        clientCity: booking.clientId?.city || null,
+        clientState: booking.clientId?.state || null,
+        clientCountry: booking.clientId?.country || null,
+        clientPincode: booking.clientId?.pincode || null,
         
         // Event Mapping
         eventName: booking.eventName || null,

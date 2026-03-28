@@ -66,6 +66,14 @@ export interface Booking {
   updatedAt: string;
   syncStatus?: SyncStatus;
   
+  // Client details
+  clientEmail?: string | null;
+  clientAddress?: string | null;
+  clientCity?: string | null;
+  clientState?: string | null;
+  clientCountry?: string | null;
+  clientPincode?: string | null;
+  
   // Event details
   eventName?: string | null;
   eventAddress?: string | null;
