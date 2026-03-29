@@ -61,14 +61,14 @@ export function MediaCard({ item, onPreview, onDelete, onStar }: MediaCardProps)
                     >
                         <Trash2 className="h-5 w-5" />
                     </Button>
-                    <Button
+                    {/* <Button
                         size="icon"
                         variant="secondary"
                         className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-yellow-500/40 text-white hover:text-yellow-200"
                         onClick={() => onStar?.(item.id)}
                     >
                         <Star className="h-5 w-5" />
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 

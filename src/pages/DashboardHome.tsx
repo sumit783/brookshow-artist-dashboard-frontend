@@ -4,6 +4,7 @@ import { apiClient } from "../services/apiClient";
 import { Artist } from "../types";
 import { config } from "../config";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { WelcomeBanner } from "../components/dashboard/WelcomeBanner";
 import { ArtistProfileCard } from "../components/dashboard/ArtistProfileCard";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
@@ -11,41 +12,31 @@ import { MediaGallery } from "../components/dashboard/MediaGallery";
 
 export default function DashboardHome() {
   const { user } = useAuth();
-  const [artist, setArtist] = useState<Artist | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any | null>(null);
-  const [networkError, setNetworkError] = useState(false);
   const navigate = useNavigate();
 
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ["artistProfile"],
+    queryFn: () => apiClient.artists.getProfile(),
+    enabled: !!user,
+    retry: 1,
+  });
+
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const data = await apiClient.artists.getProfile();
-        setArtist(data);
-        setProfile(data); // Using artist as profile for backward compatibility in the component
-      } catch (err) {
-        console.error("Failed to load dashboard data:", err);
-        const message = err instanceof Error ? err.message : String(err);
-        if (message.includes("Network connection required")) {
-          setNetworkError(true);
-        } else if (message.includes("Artist profile not found") || message.includes("404")) {
-          navigate("/complete-profile", { replace: true });
-        }
-      } finally {
-        setLoading(false);
+    if (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("Artist profile not found") || message.includes("404")) {
+        navigate("/complete-profile", { replace: true });
       }
-    };
-
-    loadDashboardData();
-  }, [navigate]);
+    }
+  }, [error, navigate]);
 
   useEffect(() => {
-    if (!loading && !profile) {
+    if (!isLoading && !profile && !error) {
       navigate("/complete-profile", { replace: true });
     }
-  }, [loading, profile, navigate]);
+  }, [isLoading, profile, error, navigate]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
@@ -58,9 +49,9 @@ export default function DashboardHome() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8 slide-in-up">
-      {networkError && (
+      {error && !profile && (
         <div className="glass-modern p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400 font-medium animate-shake">
-          Network connection required. Please check your internet connection.
+          {error instanceof Error ? error.message : "Failed to load dashboard data. Please check your connection."}
         </div>
       )}
 
@@ -78,13 +69,13 @@ export default function DashboardHome() {
       }
 
       {/* Welcome Section */}
-      <WelcomeBanner profile={profile} artist={artist} />
+      <WelcomeBanner profile={profile} artist={profile} />
 
       {/* Stats Section */}
       <DashboardStats profile={profile} />
 
       {/* Profile Details */}
-      <ArtistProfileCard profile={profile} artist={artist} />
+      <ArtistProfileCard profile={profile} artist={profile} />
 
       {/* Media Portfolio */}
       <MediaGallery media={profile?.media} />

@@ -261,6 +261,7 @@ export const artistsApi = {
         verified: artist.verified !== undefined ? artist.verified : (artist.isVerified || false),
         media: Array.isArray(artist.media) ? artist.media : [],
         coverImageId: artist.coverImageId || artist.profileImage || undefined,
+        isActive: artist.isActive !== undefined ? artist.isActive : true,
         createdAt: artist.createdAt || new Date().toISOString(),
       };
 
@@ -319,6 +320,7 @@ export const artistsApi = {
         verified: artist.verified !== undefined ? artist.verified : (artist.isVerified !== undefined ? artist.isVerified : (data.verified || false)),
         media: Array.isArray(artist.media) ? artist.media : (data.media || []),
         coverImageId: artist.coverImageId || artist.profileImage || data.coverImageId || undefined,
+        isActive: artist.isActive !== undefined ? artist.isActive : (data.isActive !== undefined ? data.isActive : true),
         createdAt: artist.createdAt || new Date().toISOString(),
       };
 
@@ -428,6 +430,7 @@ export const artistsApi = {
         verified: artist.isVerified || artist.verified || false,
         media: Array.isArray(artist.media) ? artist.media : [],
         coverImageId: artist.profileImage || artist.coverImageId || undefined,
+        isActive: artist.isActive !== undefined ? artist.isActive : true,
         createdAt: artist.createdAt || new Date().toISOString(),
         stats: artist.stats || undefined,
       };
@@ -435,6 +438,28 @@ export const artistsApi = {
       return mappedArtist;
     } catch (error) {
       console.error("Error in getProfile:", error);
+      throw error;
+    }
+  },
+
+  async toggleActive(): Promise<{ success: boolean; isActive: boolean }> {
+    try {
+      const response = await apiFetch("/artist/toggle-active", {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Failed to toggle active status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: data.success || false,
+        isActive: data.isActive !== undefined ? data.isActive : false,
+      };
+    } catch (error) {
+      console.error("Error in toggleActive:", error);
       throw error;
     }
   },
@@ -1293,7 +1318,7 @@ export const mediaApi = {
   async delete(id: string): Promise<void> {
     try {
       console.log("Deleting media:", id);
-      const response = await apiFetch(`/media/${id}`, {
+      const response = await apiFetch(`/artist/profile/media/${id}`, {
         method: "DELETE",
       });
 

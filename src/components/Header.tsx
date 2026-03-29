@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Wifi, WifiOff, User, Menu, Download, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
 import { useSync } from "../hooks/useSync";
+import { apiClient } from "../services/apiClient";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -13,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
+import { Switch } from "./ui/switch";
 import { config } from "../config";
 import { useToast } from "../hooks/use-toast";
 import logo from "../assets/logo.webp";
@@ -26,8 +29,42 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { isOnline, pendingCount } = useSync();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstall, setShowInstall] = useState(false);
+
+  const { data: artistProfile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["artistProfile"],
+    queryFn: () => apiClient.artists.getProfile(),
+    enabled: !!user,
+  });
+
+  const { mutate: toggleActive, isPending: isToggling } = useMutation({
+    mutationFn: () => apiClient.artists.toggleActive(),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["artistProfile"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          isActive: data.isActive,
+        };
+      });
+      toast({
+        title: data.isActive ? "Profile Active" : "Profile Inactive",
+        description: data.isActive 
+          ? "You are now visible and accepting new bookings." 
+          : "You are currently hidden from search results.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     // Check if app is already installed
@@ -100,9 +137,27 @@ export function Header({ onMenuClick }: HeaderProps) {
             </Button>
           )}
 
+          {/* Active Status Toggle */}
+          {user && (
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full border border-border/50 bg-accent/5 backdrop-blur-sm">
+              <div className="flex flex-col items-end mr-1">
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${artistProfile?.isActive ? 'text-success' : 'text-muted-foreground'}`}>
+                  {artistProfile?.isActive ? 'Accepting' : 'Paused'}
+                </span>
+                <span className="text-[9px] text-muted-foreground leading-none">Bookings</span>
+              </div>
+              <Switch
+                checked={artistProfile?.isActive ?? false}
+                onCheckedChange={() => toggleActive()}
+                disabled={isToggling || isProfileLoading}
+                className="data-[state=checked]:bg-success"
+              />
+            </div>
+          )}
+
           {/* Online/Offline Indicator */}
           <div className="flex items-center gap-2">
-            {isOnline ? (
+            {/* {isOnline ? (
               <>
                 <Wifi className="h-4 w-4 text-success" />
                 <span className="text-sm text-muted-foreground hidden sm:inline">
@@ -116,7 +171,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                   Offline
                 </span>
               </>
-            )}
+            )} */}
 
             {pendingCount > 0 && (
               <Badge variant="secondary" className="ml-2">

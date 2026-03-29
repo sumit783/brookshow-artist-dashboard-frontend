@@ -19,6 +19,7 @@ export interface Artist {
   verificationNote: string;
   media: MediaItem[];
   coverImageId?: string;
+  isActive: boolean;
   createdAt: string;
   stats?: ArtistStats;
 }
