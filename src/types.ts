@@ -20,6 +20,7 @@ export interface Artist {
   media: MediaItem[];
   coverImageId?: string;
   isActive: boolean;
+  isAvailable: boolean;
   createdAt: string;
   stats?: ArtistStats;
 }

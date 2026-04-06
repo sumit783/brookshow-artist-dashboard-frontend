@@ -47,12 +47,12 @@ export function Header({ onMenuClick }: HeaderProps) {
         if (!old) return old;
         return {
           ...old,
-          isActive: data.isActive,
+          isAvailable: data.isAvailable,
         };
       });
       toast({
-        title: data.isActive ? "Profile Active" : "Profile Inactive",
-        description: data.isActive 
+        title: data.isAvailable ? "Profile Active" : "Profile Inactive",
+        description: data.isAvailable 
           ? "You are now visible and accepting new bookings." 
           : "You are currently hidden from search results.",
       });
@@ -141,13 +141,13 @@ export function Header({ onMenuClick }: HeaderProps) {
           {user && (
             <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full border border-border/50 bg-accent/5 backdrop-blur-sm">
               <div className="flex flex-col items-end mr-1">
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${artistProfile?.isActive ? 'text-success' : 'text-muted-foreground'}`}>
-                  {artistProfile?.isActive ? 'Accepting' : 'Paused'}
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${artistProfile?.isAvailable ? 'text-success' : 'text-muted-foreground'}`}>
+                  {artistProfile?.isAvailable ? 'Accepting' : 'Paused'}
                 </span>
                 <span className="text-[9px] text-muted-foreground leading-none">Bookings</span>
               </div>
               <Switch
-                checked={artistProfile?.isActive ?? false}
+                checked={artistProfile?.isAvailable ?? false}
                 onCheckedChange={() => toggleActive()}
                 disabled={isToggling || isProfileLoading}
                 className="data-[state=checked]:bg-success"

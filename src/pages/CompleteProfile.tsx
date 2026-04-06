@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Badge } from "../components/ui/badge";
-import { Camera, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Camera, RefreshCcw } from "lucide-react";
 import { apiClient } from "../services/apiClient";
 import { ProfilePayload, EventPricing } from "../types";
 
@@ -169,15 +169,24 @@ const CompleteProfile = () => {
             Complete Your Profile
           </h1>
           <p className="text-muted-foreground">Fill in your details to get started</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="mt-2"
-          >
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh Page
-          </Button>
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/login")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Refresh Page
+            </Button>
+          </div>
         </div>
 
         <Card className="glass-modern hover-glow hover:scale-100">
@@ -355,7 +364,7 @@ const CompleteProfile = () => {
                               id={`${category}-planner`}
                               type="number"
                               min="0"
-                              step="0.01"
+                              step="1"
                               required
                               placeholder="1000"
                               value={eventPricing[category]?.eventPlannerPrice || ""}
@@ -370,9 +379,9 @@ const CompleteProfile = () => {
                               id={`${category}-user`}
                               type="number"
                               min="0"
-                              step="0.01"
+                              step="1"
                               required
-                              placeholder="800"
+                              placeholder="2000"
                               value={eventPricing[category]?.userPrice || ""}
                               onChange={(e) =>
                                 handlePricingChange(category, "userPrice", e.target.value)
@@ -380,14 +389,14 @@ const CompleteProfile = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`${category}-advance`}>Advance</Label>
+                            <Label htmlFor={`${category}-advance`}>Advances <span className="text-xs text-muted-foreground">(greater than 10% of price)</span></Label>
                             <Input
                               id={`${category}-advance`}
                               type="number"
                               min="0"
-                              step="0.01"
+                              step="1"
                               required
-                              placeholder="100"
+                              placeholder="400"
                               value={eventPricing[category]?.advance || ""}
                               onChange={(e) =>
                                 handlePricingChange(category, "advance", e.target.value)

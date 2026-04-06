@@ -14,7 +14,7 @@ export default function DashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading, error } = useQuery({
+  const { data: profile, isLoading, isFetched, error } = useQuery({
     queryKey: ["artistProfile"],
     queryFn: () => apiClient.artists.getProfile(),
     enabled: !!user,
@@ -22,19 +22,20 @@ export default function DashboardHome() {
   });
 
   useEffect(() => {
+    if (!isFetched) return; // Don't act until the query has completed at least once
+
     if (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("Artist profile not found") || message.includes("404")) {
         navigate("/complete-profile", { replace: true });
       }
+      return;
     }
-  }, [error, navigate]);
 
-  useEffect(() => {
-    if (!isLoading && !profile && !error) {
+    if (!profile) {
       navigate("/complete-profile", { replace: true });
     }
-  }, [isLoading, profile, error, navigate]);
+  }, [isFetched, error, profile, navigate]);
 
   if (isLoading) {
     return (

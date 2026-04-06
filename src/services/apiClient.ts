@@ -262,6 +262,7 @@ export const artistsApi = {
         media: Array.isArray(artist.media) ? artist.media : [],
         coverImageId: artist.coverImageId || artist.profileImage || undefined,
         isActive: artist.isActive !== undefined ? artist.isActive : true,
+        isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : true,
         createdAt: artist.createdAt || new Date().toISOString(),
       };
 
@@ -321,6 +322,7 @@ export const artistsApi = {
         media: Array.isArray(artist.media) ? artist.media : (data.media || []),
         coverImageId: artist.coverImageId || artist.profileImage || data.coverImageId || undefined,
         isActive: artist.isActive !== undefined ? artist.isActive : (data.isActive !== undefined ? data.isActive : true),
+        isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : (data.isAvailable !== undefined ? data.isAvailable : true),
         createdAt: artist.createdAt || new Date().toISOString(),
       };
 
@@ -410,9 +412,12 @@ export const artistsApi = {
       }
 
       const data = await response.json();
-      const artist = data.success ? data : data.artist;
 
-      if (!artist) {
+      // API returns the profile as the root object with a `success` flag.
+      // If the response has an `artist` key, use that; otherwise the root IS the profile.
+      const artist = data.artist ? data.artist : (data.success && data._id ? data : null);
+
+      if (!artist || !artist._id) {
         throw new Error("Artist profile not found");
       }
 
@@ -431,6 +436,7 @@ export const artistsApi = {
         media: Array.isArray(artist.media) ? artist.media : [],
         coverImageId: artist.profileImage || artist.coverImageId || undefined,
         isActive: artist.isActive !== undefined ? artist.isActive : true,
+        isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : true,
         createdAt: artist.createdAt || new Date().toISOString(),
         stats: artist.stats || undefined,
       };
@@ -442,7 +448,9 @@ export const artistsApi = {
     }
   },
 
-  async toggleActive(): Promise<{ success: boolean; isActive: boolean }> {
+  async toggleActive(): Promise<{
+    isAvailable: any; success: boolean; isActive: boolean 
+}> {
     try {
       const response = await apiFetch("/artist/toggle-active", {
         method: "PATCH",
@@ -457,6 +465,7 @@ export const artistsApi = {
       return {
         success: data.success || false,
         isActive: data.isActive !== undefined ? data.isActive : false,
+        isAvailable: data.isAvailable !== undefined ? data.isAvailable : false,
       };
     } catch (error) {
       console.error("Error in toggleActive:", error);
