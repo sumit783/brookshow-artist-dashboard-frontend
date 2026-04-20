@@ -3,6 +3,7 @@ import { Wifi, WifiOff, User, Menu, Download, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
+import { BookingStatusToggle } from "./dashboard/BookingStatusToggle";
 import { useSync } from "../hooks/useSync";
 import { apiClient } from "../services/apiClient";
 import { Button } from "./ui/button";
@@ -34,37 +35,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstall, setShowInstall] = useState(false);
 
-  const { data: artistProfile, isLoading: isProfileLoading } = useQuery({
-    queryKey: ["artistProfile"],
-    queryFn: () => apiClient.artists.getProfile(),
-    enabled: !!user,
-  });
 
-  const { mutate: toggleActive, isPending: isToggling } = useMutation({
-    mutationFn: () => apiClient.artists.toggleActive(),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["artistProfile"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          isAvailable: data.isAvailable,
-        };
-      });
-      toast({
-        title: data.isAvailable ? "Profile Active" : "Profile Inactive",
-        description: data.isAvailable 
-          ? "You are now visible and accepting new bookings." 
-          : "You are currently hidden from search results.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update status",
-        variant: "destructive",
-      });
-    },
-  });
 
   useEffect(() => {
     // Check if app is already installed
@@ -138,22 +109,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           )}
 
           {/* Active Status Toggle */}
-          {user && (
-            <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full border border-border/50 bg-accent/5 backdrop-blur-sm">
-              <div className="flex flex-col items-end mr-1">
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${artistProfile?.isAvailable ? 'text-success' : 'text-muted-foreground'}`}>
-                  {artistProfile?.isAvailable ? 'Accepting' : 'Paused'}
-                </span>
-                <span className="text-[9px] text-muted-foreground leading-none">Bookings</span>
-              </div>
-              <Switch
-                checked={artistProfile?.isAvailable ?? false}
-                onCheckedChange={() => toggleActive()}
-                disabled={isToggling || isProfileLoading}
-                className="data-[state=checked]:bg-success"
-              />
-            </div>
-          )}
+          <BookingStatusToggle className="hidden lg:flex" />
 
           {/* Online/Offline Indicator */}
           <div className="flex items-center gap-2">
@@ -173,11 +129,11 @@ export function Header({ onMenuClick }: HeaderProps) {
               </>
             )} */}
 
-            {pendingCount > 0 && (
+            {/* {pendingCount > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {pendingCount} pending
               </Badge>
-            )}
+            )} */}
 
             <Button
               variant="ghost"

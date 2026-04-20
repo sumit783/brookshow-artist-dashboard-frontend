@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
+import { BookingStatusToggle } from "./dashboard/BookingStatusToggle";
 
 interface SidebarProps {
   open: boolean;
@@ -61,6 +62,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             >
               <X className="h-5 w-5" />
             </Button>
+          </div>
+
+          {/* Booking Status Toggle - Mobile only */}
+          <div className="px-4 pb-2 lg:hidden">
+            <BookingStatusToggle className="w-full justify-between" />
           </div>
 
           {/* Navigation */}

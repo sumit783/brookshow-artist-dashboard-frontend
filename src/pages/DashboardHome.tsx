@@ -9,6 +9,7 @@ import { WelcomeBanner } from "../components/dashboard/WelcomeBanner";
 import { ArtistProfileCard } from "../components/dashboard/ArtistProfileCard";
 import { DashboardStats } from "../components/dashboard/DashboardStats";
 import { MediaGallery } from "../components/dashboard/MediaGallery";
+import { ShareProfileCard } from "../components/dashboard/ShareProfileCard";
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -71,6 +72,11 @@ export default function DashboardHome() {
 
       {/* Welcome Section */}
       <WelcomeBanner profile={profile} artist={profile} />
+
+      {/* Share Profile Link */}
+      {profile?.id && (
+        <ShareProfileCard artistId={profile.id} />
+      )}
 
       {/* Stats Section */}
       <DashboardStats profile={profile} />
