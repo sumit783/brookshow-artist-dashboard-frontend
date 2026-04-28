@@ -234,10 +234,20 @@ export default function Wallet() {
       {/* Bank Details Dialog */}
       <BankDetailsDialog
         isOpen={isBankDetailsOpen}
-        onClose={() => setIsBankDetailsOpen(false)}
+        onClose={() => {
+          setIsBankDetailsOpen(false);
+          apiClient.bankDetails.getBankDetails().then(bankData => {
+            if (bankData.length > 0) {
+              setSelectedBank(bankData.find(b => b.isPrimary) || bankData[0]);
+            } else {
+              setSelectedBank(null);
+            }
+          }).catch(console.error);
+        }}
         onSelect={(bank) => {
           setSelectedBank(bank);
-          // Optionally auto-open withdraw dialog if we were trying to withdraw
+          setIsBankDetailsOpen(false);
+          setIsWithdrawOpen(true);
         }}
       />
 

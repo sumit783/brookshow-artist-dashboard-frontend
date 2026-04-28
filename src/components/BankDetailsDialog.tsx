@@ -106,6 +106,9 @@ export function BankDetailsDialog({ isOpen, onClose, onSelect }: BankDetailsDial
         title: "Success",
         description: "Bank detail added successfully",
       });
+      if (onSelect) {
+        onSelect(addedDetail);
+      }
     } catch (error) {
       console.error("Error adding bank detail:", error);
       toast({
