@@ -761,10 +761,26 @@ export const bookingsApi = {
         updatedAt: booking.updatedAt,
         syncStatus: "synced" as const,
 
+        // Client details from nested clientId if available
+        clientEmail: booking.clientId?.email || null,
+        clientAddress: booking.clientId?.address || null,
+        clientCity: booking.clientId?.city || null,
+        clientState: booking.clientId?.state || null,
+        clientCountry: booking.clientId?.country || null,
+        clientPincode: booking.clientId?.pincode || null,
+
         // Basic event info for fallback
-        eventName: booking.eventName || null,
-        eventAddress: booking.eventAddress || null,
-        eventCity: booking.eventCity || null,
+        eventName: booking.eventName || booking.eventId?.title || null,
+        eventAddress: booking.eventAddress || booking.eventId?.address || booking.eventId?.venue || null,
+        eventCity: booking.eventCity || booking.eventId?.city || null,
+        eventState: booking.eventState || booking.eventId?.state || null,
+        eventCountry: booking.eventCountry || booking.eventId?.country || null,
+        eventPincode: booking.eventPincode || booking.eventId?.pincode || null,
+        eventLat: booking.eventLat || booking.eventId?.lat || null,
+        eventLng: booking.eventLng || booking.eventId?.lng || null,
+        commissionAmount: booking.commissionAmount || undefined,
+        paymentStatus: booking.paymentStatus || undefined,
+        razorpayOrderId: booking.razorpayOrderId || undefined,
       }));
 
       return mappedBookings;
@@ -829,14 +845,14 @@ export const bookingsApi = {
         clientPincode: booking.clientId?.pincode || null,
         
         // Event Mapping
-        eventName: booking.eventName || null,
-        eventAddress: booking.eventAddress || null,
-        eventCity: booking.eventCity || null,
-        eventState: booking.eventState || null,
-        eventCountry: booking.eventCountry || null,
-        eventPincode: booking.eventPincode || null,
-        eventLat: booking.eventLat || null,
-        eventLng: booking.eventLng || null,
+        eventName: booking.eventName || booking.eventId?.title || null,
+        eventAddress: booking.eventAddress || booking.eventId?.address || booking.eventId?.venue || null,
+        eventCity: booking.eventCity || booking.eventId?.city || null,
+        eventState: booking.eventState || booking.eventId?.state || null,
+        eventCountry: booking.eventCountry || booking.eventId?.country || null,
+        eventPincode: booking.eventPincode || booking.eventId?.pincode || null,
+        eventLat: booking.eventLat || booking.eventId?.lat || null,
+        eventLng: booking.eventLng || booking.eventId?.lng || null,
         commissionAmount: booking.commissionAmount || undefined,
         paymentStatus: booking.paymentStatus || undefined,
         razorpayOrderId: booking.razorpayOrderId || undefined,
