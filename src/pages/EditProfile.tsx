@@ -33,6 +33,7 @@ const EditProfile = () => {
     city: "",
     state: "",
     country: "",
+    experianceYear: "",
   });
   const [eventPricing, setEventPricing] = useState<Record<string, EventPricing>>({});
   const [loading, setLoading] = useState(true);
@@ -92,6 +93,7 @@ const EditProfile = () => {
             city: data.location?.city || data.city || "",
             state: data.location?.state || data.state || "",
             country: data.location?.country || data.country || "",
+            experianceYear: data.experianceYear !== undefined ? String(data.experianceYear) : "",
           });
           
           let initialCategories: string[] = [];
@@ -241,6 +243,7 @@ const EditProfile = () => {
         state: form.state.trim(),
         country: form.country.trim(),
         eventPricing,
+        experianceYear: form.experianceYear ? Number(form.experianceYear) : undefined,
       };
 
       const response = await apiClient.artists.updateProfile(payload);
@@ -415,6 +418,20 @@ const EditProfile = () => {
                   onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
                   required
                   rows={4}
+                />
+              </div>
+
+              {/* Experience */}
+              <div className="space-y-2">
+                <Label htmlFor="experianceYear">Experience (Years)</Label>
+                <Input
+                  id="experianceYear"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="e.g. 5"
+                  value={form.experianceYear}
+                  onChange={(e) => setForm((prev) => ({ ...prev, experianceYear: e.target.value }))}
                 />
               </div>
 

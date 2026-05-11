@@ -52,6 +52,8 @@ export function MediaUpload({ onUpload, uploading }: MediaUploadProps) {
                 <div className="flex gap-4 text-xs font-medium text-muted-foreground bg-background/50 px-4 py-2 rounded-full border border-border/50">
                     <span>Max size: 100MB</span>
                     <span className="w-px h-3 bg-border" />
+                    <span>Max 10 files</span>
+                    <span className="w-px h-3 bg-border" />
                     <span>Images & Videos</span>
                 </div>
             </div>

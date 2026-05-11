@@ -264,6 +264,7 @@ export const artistsApi = {
         isActive: artist.isActive !== undefined ? artist.isActive : true,
         isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : true,
         createdAt: artist.createdAt || new Date().toISOString(),
+        experianceYear: artist.experianceYear,
       };
 
       console.log("Mapped artist:", mappedArtist);
@@ -287,6 +288,7 @@ export const artistsApi = {
       if (data.city !== undefined) updatePayload.city = data.city;
       if (data.coverImageId !== undefined) updatePayload.coverImageId = data.coverImageId;
       if (data.verified !== undefined) updatePayload.verified = data.verified;
+      if (data.experianceYear !== undefined) updatePayload.experianceYear = data.experianceYear;
 
       const response = await apiFetch(`/artist/${id}`, {
         method: "PUT",
@@ -324,6 +326,7 @@ export const artistsApi = {
         isActive: artist.isActive !== undefined ? artist.isActive : (data.isActive !== undefined ? data.isActive : true),
         isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : (data.isAvailable !== undefined ? data.isAvailable : true),
         createdAt: artist.createdAt || new Date().toISOString(),
+        experianceYear: artist.experianceYear || data.experianceYear,
       };
 
       return mappedArtist;
@@ -346,6 +349,9 @@ export const artistsApi = {
     formData.append("state", payload.state);
     formData.append("country", payload.country);
     formData.append("eventPricing", JSON.stringify(payload.eventPricing));
+    if (payload.experianceYear !== undefined) {
+      formData.append("experianceYear", payload.experianceYear.toString());
+    }
 
     const response = await apiFetch("/artist/profile", {
       method: "PUT",
@@ -378,6 +384,9 @@ export const artistsApi = {
     formData.append("state", payload.state);
     formData.append("country", payload.country);
     formData.append("eventPricing", JSON.stringify(payload.eventPricing));
+    if (payload.experianceYear !== undefined) {
+      formData.append("experianceYear", payload.experianceYear.toString());
+    }
 
     const response = await apiFetch("/artist/profile", {
       method: "POST",
@@ -439,6 +448,7 @@ export const artistsApi = {
         isAvailable: artist.isAvailable !== undefined ? artist.isAvailable : true,
         createdAt: artist.createdAt || new Date().toISOString(),
         stats: artist.stats || undefined,
+        experianceYear: artist.experianceYear,
       };
 
       return mappedArtist;

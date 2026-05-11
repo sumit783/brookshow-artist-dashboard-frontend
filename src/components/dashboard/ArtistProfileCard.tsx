@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { User, Mail, Phone, MapPin, CheckCircle } from "lucide-react";
+import { User, Mail, Phone, MapPin, CheckCircle, Briefcase } from "lucide-react";
 import { Artist } from "../../types";
 
 interface ArtistProfileCardProps {
@@ -57,6 +57,16 @@ export function ArtistProfileCard({ profile, artist: propsArtist }: ArtistProfil
                                 <p className="font-medium">{location}</p>
                             </div>
                         </div>
+
+                        {artist?.experianceYear !== undefined && (
+                            <div className="flex items-start gap-3">
+                                <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Experience</p>
+                                    <p className="font-medium">{artist.experianceYear} Years</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4">

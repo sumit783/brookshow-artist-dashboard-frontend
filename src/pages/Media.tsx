@@ -105,7 +105,16 @@ export default function Media() {
   };
 
   const uploadToServer = async (files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
+
+    if (files.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "You can only upload a maximum of 10 items at a time.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const MAX_SIZE = 100 * 1024 * 1024; // 100MB
     for (let i = 0; i < files.length; i++) {

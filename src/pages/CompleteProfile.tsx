@@ -28,6 +28,7 @@ const CompleteProfile = () => {
     city: "",
     state: "",
     country: "",
+    experianceYear: "",
   });
   const [eventPricing, setEventPricing] = useState<Record<string, EventPricing>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -134,6 +135,7 @@ const CompleteProfile = () => {
         state: form.state.trim(),
         country: form.country.trim(),
         eventPricing,
+        experianceYear: form.experianceYear ? Number(form.experianceYear) : undefined,
       };
 
       const response = await apiClient.artists.completeProfile(payload);
@@ -242,6 +244,20 @@ const CompleteProfile = () => {
                   onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
                   required
                   rows={4}
+                />
+              </div>
+
+              {/* Experience */}
+              <div className="space-y-2">
+                <Label htmlFor="experianceYear">Experience (Years)</Label>
+                <Input
+                  id="experianceYear"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="e.g. 5"
+                  value={form.experianceYear}
+                  onChange={(e) => setForm((prev) => ({ ...prev, experianceYear: e.target.value }))}
                 />
               </div>
 

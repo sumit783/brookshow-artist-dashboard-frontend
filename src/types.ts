@@ -23,6 +23,7 @@ export interface Artist {
   isAvailable: boolean;
   createdAt: string;
   stats?: ArtistStats;
+  experianceYear?: number;
 }
 
 export interface Service {
@@ -210,6 +211,7 @@ export interface ProfilePayload {
   state: string;
   country: string;
   eventPricing: Record<string, EventPricing>;
+  experianceYear?: number;
 }
 
 export interface WalletStats {
